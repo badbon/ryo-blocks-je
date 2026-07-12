@@ -19,7 +19,28 @@ Installed mods:
 
 ```text
 fabric-api-0.92.9+1.20.1.jar
+iris-1.7.6+mc1.20.1.jar
+indium-1.0.36+mc1.20.1.jar
 ryo-blocks-1.0.0.jar
+sodium-fabric-0.5.13+mc1.20.1.jar
+```
+
+## Low-Memory Ryo Block Tint
+
+The profile uses Iris `1.7.6` with Sodium `0.5.13` and Indium `1.0.36`. This exact combination is required because Sodium `0.5.13` needs Iris `1.7.6` or newer and Indium `1.0.36` or newer.
+
+Ryo block tinting is performed by the Iris shader archive at:
+
+```text
+C:\Users\komputer\AppData\Roaming\.minecraft\ryo-blocks\shaderpacks\Ryo-Vanilla-Tint.zip
+```
+
+`config\iris.properties` selects that archive and enables shaders on startup. The shader samples Minecraft's native block atlas plus one shared 512px Ryo texture, avoiding per-block 512px atlas allocation. The installed Ryo mod jar should therefore be small; it supplies the resource pack, item/HUD art, skin overrides, and entity assets, while terrain tinting happens in Iris.
+
+The prior high-memory baked-texture build is retained as a non-loadable rollback in the mods directory:
+
+```text
+ryo-blocks-1.0.0.jar.pre-iris-shared-texture-tint
 ```
 
 The source snapshot includes the remote Codex transcript here:

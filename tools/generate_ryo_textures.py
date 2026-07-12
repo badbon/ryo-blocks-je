@@ -36,8 +36,6 @@ EARLY_SURVIVAL_ITEMS = {
 
 HUD_TEXTURES = ("icons.png",)
 SHIELD_TEXTURES = ("shield_base.png", "shield_base_nopattern.png")
-CLEAR_GLASS_ALPHA = 56
-RYO_BLOCK_OVERLAY_STRENGTH = 0.88
 
 
 def reset_directory(path: Path) -> None:
@@ -85,40 +83,6 @@ def square_source(source_path: Path, target_size: int) -> Image.Image:
         opaque.alpha_composite(tile)
         tile = opaque
     return tile
-
-
-def vanilla_frame_count(vanilla: Image.Image, has_mcmeta: bool) -> int:
-    if has_mcmeta and vanilla.width > 0 and vanilla.height % vanilla.width == 0:
-        return max(1, vanilla.height // vanilla.width)
-    return 1
-
-
-def build_frame(tile: Image.Image, vanilla_frame: Image.Image, target_size: int) -> Image.Image:
-    # Minecraft textures are pixel art. Nearest-neighbor scaling preserves their
-    # exact pixels and cutout/translucency masks without filtered halo edges.
-    vanilla_scaled = vanilla_frame.convert("RGBA").resize(
-        (target_size, target_size),
-        Image.Resampling.NEAREST,
-    )
-    return ryo_tinted_block_texture(tile, vanilla_scaled)
-
-
-def build_clear_glass(tile: Image.Image, vanilla: Image.Image, target_size: int) -> Image.Image:
-    """Blend vanilla glass shading into Ryo colors without an alpha border."""
-    vanilla_scaled = vanilla.convert("RGBA").resize(
-        (target_size, target_size),
-        Image.Resampling.NEAREST,
-    )
-    vanilla_scaled.putalpha(Image.new("L", vanilla_scaled.size, CLEAR_GLASS_ALPHA))
-    return ryo_tinted_block_texture(tile, vanilla_scaled)
-
-
-def ryo_tinted_block_texture(tile: Image.Image, vanilla: Image.Image) -> Image.Image:
-    """Keep a faint vanilla identity under a deliberately dominant Ryo overlay."""
-    vanilla = vanilla.convert("RGBA")
-    ryo = ImageOps.fit(tile, vanilla.size, method=Image.Resampling.LANCZOS).convert("RGB")
-    blended = Image.blend(vanilla.convert("RGB"), ryo, RYO_BLOCK_OVERLAY_STRENGTH)
-    return Image.merge("RGBA", (*blended.split(), vanilla.getchannel("A")))
 
 
 def ryo_masked_texture(tile: Image.Image, vanilla: Image.Image) -> Image.Image:
@@ -193,17 +157,13 @@ def generate_shield_textures(jar: zipfile.ZipFile, output_dir: Path, tile: Image
     return len(SHIELD_TEXTURES)
 
 
-def is_static_opaque(vanilla: Image.Image, has_mcmeta: bool) -> bool:
-    return not has_mcmeta and vanilla.getchannel("A").getextrema() == (255, 255)
-
-
 def clear_model_redirects(output_dir: Path) -> None:
-    """Remove old shared-tile model overrides before emitting per-block textures."""
+    """Remove old block texture model overrides before shader-time tinting."""
     model_root = output_dir / "assets" / "minecraft" / "models"
     reset_directory(model_root)
 
 
-def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path, target_size: int) -> dict[str, int]:
+def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path, target_size: int) -> dict[str, int | str]:
     if not minecraft_jar.exists():
         raise FileNotFoundError(f"Minecraft jar not found: {minecraft_jar}")
     if not source_image.exists():
@@ -213,79 +173,23 @@ def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path,
     reset_directory(texture_root)
 
     tile = square_source(source_image, target_size)
-    generated = 0
-    copied_mcmeta = 0
-    animated = 0
-    static_opaque = 0
 
     with zipfile.ZipFile(minecraft_jar) as jar:
         names = set(jar.namelist())
-        texture_names = sorted(
-            name
+        vanilla_block_textures = sum(
+            name.startswith(BLOCK_PREFIX) and name.endswith(".png")
             for name in names
-            if name.startswith(BLOCK_PREFIX) and name.endswith(".png")
         )
-
-        for name in texture_names:
-            relative = name.removeprefix(BLOCK_PREFIX)
-            out_path = texture_root / relative
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-
-            with jar.open(name) as raw:
-                vanilla = Image.open(raw).convert("RGBA")
-                vanilla.load()
-
-            mcmeta_name = f"{name}.mcmeta"
-            has_mcmeta = mcmeta_name in names
-            if is_static_opaque(vanilla, has_mcmeta):
-                static_opaque += 1
-
-            frame_count = vanilla_frame_count(vanilla, has_mcmeta)
-            frames: list[Image.Image] = []
-            if relative == "glass.png":
-                frames.append(build_clear_glass(tile, vanilla, target_size))
-            elif frame_count > 1:
-                animated += 1
-                source_frame_size = vanilla.width
-                for frame_index in range(frame_count):
-                    vanilla_frame = vanilla.crop(
-                        (
-                            0,
-                            frame_index * source_frame_size,
-                            vanilla.width,
-                            (frame_index + 1) * source_frame_size,
-                        )
-                    )
-                    frames.append(build_frame(tile, vanilla_frame, target_size))
-            else:
-                frames.append(build_frame(tile, vanilla, target_size))
-
-            output = Image.new("RGBA", (target_size, target_size * len(frames)), (0, 0, 0, 0))
-            for index, frame in enumerate(frames):
-                output.alpha_composite(frame, (0, index * target_size))
-            output.save(out_path)
-            generated += 1
-
-            if has_mcmeta:
-                mcmeta_out = out_path.with_suffix(out_path.suffix + ".mcmeta")
-                mcmeta_out.write_bytes(jar.read(mcmeta_name))
-                copied_mcmeta += 1
-
-        shared_path = texture_root / "ryo.png"
-        tile.save(shared_path)
-        generated += 1
         clear_model_redirects(output_dir)
         generated_items = generate_item_textures(jar, names, output_dir, tile)
         generated_hud = generate_hud_textures(jar, output_dir, tile)
         generated_shields = generate_shield_textures(jar, output_dir, tile)
 
     summary = {
-        "generated_png": generated,
-        "copied_mcmeta": copied_mcmeta,
-        "animated_textures": animated,
-        "static_opaque_textures": static_opaque,
+        "generated_block_textures": 0,
+        "vanilla_block_textures": vanilla_block_textures,
         "model_texture_redirects": 0,
-        "ryo_block_overlay_strength": RYO_BLOCK_OVERLAY_STRENGTH,
+        "block_tint_renderer": "iris_shaderpack",
         "generated_early_survival_items": generated_items,
         "generated_hud_textures": generated_hud,
         "generated_shield_textures": generated_shields,
@@ -297,7 +201,7 @@ def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path,
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate Ryo replacements for vanilla Minecraft block textures.")
+    parser = argparse.ArgumentParser(description="Generate Ryo item/HUD assets while block tinting is handled by Iris.")
     parser.add_argument("--minecraft-jar", required=True, type=Path)
     parser.add_argument("--source-image", default=Path("source/ryo.png"), type=Path)
     parser.add_argument("--output-dir", default=Path("src/main/resources/resourcepacks/ryo_blocks"), type=Path)

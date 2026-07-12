@@ -36,9 +36,9 @@ Place the source art at:
 source/ryo.png
 ```
 
-The generator keeps the source readable by creating 512x512 block textures instead of shrinking the image to vanilla 16x16. It removes a near-solid black export strip at the source image's bottom edge, then center-crops the non-square art to a fully opaque square instead of surrounding it with transparent letterboxing. This prevents both sky-colored gaps and a false black seam between solid blocks. Every vanilla block texture is upscaled with nearest-neighbor filtering, then blended with an 88% Ryo overlay. This leaves its wood grain, ore flecks, stone pattern, and similar material cues faintly visible while Ryo remains the dominant image. Animated and transparent blocks retain their native frame behavior and alpha shapes. The important proof path is Minecraft's own framebuffer screenshots, because external desktop/window capture can show a false white OpenGL surface on this machine.
+The generator keeps the source readable for the Ryo item/HUD assets. Block tinting is rendered separately by the bundled Iris shader pack: Minecraft keeps every native block texture in its normal atlas, while the shader samples one shared 512x512 Ryo texture and blends it at 88% strength for every terrain fragment. This leaves wood grain, ore flecks, stone pattern, and similar material cues faintly visible without allocating a 512px texture for every block. Animated and transparent blocks retain their native frame behavior and alpha shapes. The important proof path is Minecraft's own framebuffer screenshots, because external desktop/window capture can show a false white OpenGL surface on this machine.
 
-Transparent block masks use nearest-neighbor scaling, preserving every vanilla alpha value without filtered fringe pixels. Doors, trapdoors, glass, stained glass, panes, plants, rails, and similar cutout/translucent assets therefore retain their exact native silhouettes and faint material patterns. Opaque doors, fences, fence gates, walls, and other shaped blocks retain Minecraft's original model geometry and now resolve to their own Ryo-tinted vanilla texture.
+The shader samples Minecraft's untouched native atlas, so doors, trapdoors, glass, stained glass, panes, plants, rails, and similar cutout/translucent assets retain their native silhouettes, shading, and animation behavior. Opaque doors, fences, fence gates, walls, and other shaped blocks retain their original models and texture cues while receiving the shared Ryo overlay at render time.
 
 Clear full glass is the intentional exception: `glass.png` has no opaque alpha frame and uses a uniform alpha of 56/255 across the Ryo image. Vanilla glass's original light/dark pixel structure is retained as color shading blended into the Ryo colors, so the material still reads as Minecraft glass without becoming a framed window. Stained glass and panes retain their vanilla alpha structures.
 
@@ -47,9 +47,15 @@ Clear full glass is the intentional exception: `glass.png` has no opaque alpha f
 ```powershell
 python tools/generate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar" --source-image source\ryo.png --target-size 512
 python tools/validate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
+python tools/build_ryo_shaderpack.py
+python tools/validate_ryo_shaderpack.py
 ```
 
-Validation rejects missing per-block coverage, incorrect Ryo/vanilla blend output, altered alpha silhouettes, legacy shared-texture model redirects, blank assets, excessive duplicate item output, and edits outside the approved hotbar regions.
+Validation rejects residual block texture overrides or model redirects, missing item/HUD assets, altered item silhouettes, and an invalid shader pack. The shader archive validator also proves it binds exactly one shared Ryo sampler from the authoritative source while retaining access to Minecraft's native block atlas.
+
+## Low-Memory Block Tint
+
+`source/ryo-vanilla-tint` contains a minimal Iris shader pack for Minecraft 1.20.1 with Sodium 0.5.13 and Indium 1.0.36. Its terrain pass samples `gtexture` (Minecraft's native block atlas) and `ryoTexture` (one generated 512px Ryo image) on the GPU. No high-resolution per-block asset is shipped in the Ryo resource pack. Build it with `tools/build_ryo_shaderpack.py`, then install the resulting `build/Ryo-Vanilla-Tint.zip` in the profile's `shaderpacks` folder and enable it through Iris.
 
 ## Build
 

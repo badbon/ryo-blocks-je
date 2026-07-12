@@ -1,10 +1,8 @@
 {
-  "generated_png": 929,
-  "copied_mcmeta": 49,
-  "animated_textures": 49,
-  "static_opaque_textures": 504,
+  "generated_block_textures": 0,
+  "vanilla_block_textures": 928,
   "model_texture_redirects": 0,
-  "ryo_block_overlay_strength": 0.88,
+  "block_tint_renderer": "iris_shaderpack",
   "generated_early_survival_items": 88,
   "generated_hud_textures": 2,
   "generated_shield_textures": 2,
