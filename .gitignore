@@ -1,0 +1,14 @@
+.gradle/
+build/
+run/
+out/
+*.log
+hs_err_pid*
+replay_pid*
+chatlog/
+proof_frames/
+proof_frames_512/
+proof-*.mp4
+*.heapdump
+__pycache__/
+*.py[cod]

@@ -1,0 +1,1 @@
+{"parent":"minecraft:block/template_cauldron_full","textures":{"bottom":"minecraft:block/cauldron_bottom","content":"block/ryo","inside":"block/ryo","particle":"block/ryo","side":"block/ryo","top":"minecraft:block/cauldron_top"}}

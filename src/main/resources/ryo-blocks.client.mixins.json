@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.go4no.ryoblocks.mixin.client",
+  "refmap": "client-ryo-blocks-refmap.json",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "AbstractClientPlayerEntityMixin",
+    "PlayerListEntryMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
