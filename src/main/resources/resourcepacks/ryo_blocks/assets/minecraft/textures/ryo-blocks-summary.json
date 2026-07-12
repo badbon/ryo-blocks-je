@@ -1,9 +1,10 @@
 {
-  "generated_png": 425,
+  "generated_png": 929,
   "copied_mcmeta": 49,
   "animated_textures": 49,
-  "shared_static_opaque_textures": 504,
-  "model_texture_redirects": 2106,
+  "static_opaque_textures": 504,
+  "model_texture_redirects": 0,
+  "ryo_block_overlay_strength": 0.88,
   "generated_early_survival_items": 88,
   "generated_hud_textures": 2,
   "generated_shield_textures": 2,

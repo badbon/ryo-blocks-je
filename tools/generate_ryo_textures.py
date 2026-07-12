@@ -13,7 +13,6 @@ from PIL import Image, ImageMath, ImageOps
 BLOCK_PREFIX = "assets/minecraft/textures/block/"
 ITEM_PREFIX = "assets/minecraft/textures/item/"
 GUI_PREFIX = "assets/minecraft/textures/gui/"
-MODEL_PREFIXES = ("assets/minecraft/models/block/", "assets/minecraft/models/item/")
 
 EARLY_SURVIVAL_ITEMS = {
     *(f"{material}_{tool}.png" for material in ("wooden", "stone", "iron", "diamond")
@@ -38,6 +37,7 @@ EARLY_SURVIVAL_ITEMS = {
 HUD_TEXTURES = ("icons.png",)
 SHIELD_TEXTURES = ("shield_base.png", "shield_base_nopattern.png")
 CLEAR_GLASS_ALPHA = 56
+RYO_BLOCK_OVERLAY_STRENGTH = 0.88
 
 
 def reset_directory(path: Path) -> None:
@@ -94,13 +94,13 @@ def vanilla_frame_count(vanilla: Image.Image, has_mcmeta: bool) -> int:
 
 
 def build_frame(tile: Image.Image, vanilla_frame: Image.Image, target_size: int) -> Image.Image:
-    # Minecraft textures are pixel art. Nearest-neighbor scaling preserves the
-    # exact cutout/translucency mask without adding halo pixels at block edges.
+    # Minecraft textures are pixel art. Nearest-neighbor scaling preserves their
+    # exact pixels and cutout/translucency masks without filtered halo edges.
     vanilla_scaled = vanilla_frame.convert("RGBA").resize(
         (target_size, target_size),
         Image.Resampling.NEAREST,
     )
-    return ryo_masked_texture(tile, vanilla_scaled)
+    return ryo_tinted_block_texture(tile, vanilla_scaled)
 
 
 def build_clear_glass(tile: Image.Image, vanilla: Image.Image, target_size: int) -> Image.Image:
@@ -110,7 +110,15 @@ def build_clear_glass(tile: Image.Image, vanilla: Image.Image, target_size: int)
         Image.Resampling.NEAREST,
     )
     vanilla_scaled.putalpha(Image.new("L", vanilla_scaled.size, CLEAR_GLASS_ALPHA))
-    return ryo_masked_texture(tile, vanilla_scaled)
+    return ryo_tinted_block_texture(tile, vanilla_scaled)
+
+
+def ryo_tinted_block_texture(tile: Image.Image, vanilla: Image.Image) -> Image.Image:
+    """Keep a faint vanilla identity under a deliberately dominant Ryo overlay."""
+    vanilla = vanilla.convert("RGBA")
+    ryo = ImageOps.fit(tile, vanilla.size, method=Image.Resampling.LANCZOS).convert("RGB")
+    blended = Image.blend(vanilla.convert("RGB"), ryo, RYO_BLOCK_OVERLAY_STRENGTH)
+    return Image.merge("RGBA", (*blended.split(), vanilla.getchannel("A")))
 
 
 def ryo_masked_texture(tile: Image.Image, vanilla: Image.Image) -> Image.Image:
@@ -189,43 +197,10 @@ def is_static_opaque(vanilla: Image.Image, has_mcmeta: bool) -> bool:
     return not has_mcmeta and vanilla.getchannel("A").getextrema() == (255, 255)
 
 
-def write_model_redirects(jar: zipfile.ZipFile, output_dir: Path, shared_textures: set[str]) -> int:
-    """Redirect only static opaque vanilla block textures to one shared tile.
-
-    This keeps every 512px pixel of the Ryo art while preventing Minecraft from
-    allocating an identical 512px atlas sprite for each opaque block texture.
-    Transparent and animated block textures retain their generated files because
-    their alpha masks or frame metadata carry visible vanilla behavior.
-    """
+def clear_model_redirects(output_dir: Path) -> None:
+    """Remove old shared-tile model overrides before emitting per-block textures."""
     model_root = output_dir / "assets" / "minecraft" / "models"
     reset_directory(model_root)
-
-    redirects = 0
-    for name in sorted(jar.namelist()):
-        if not name.endswith(".json") or not name.startswith(MODEL_PREFIXES):
-            continue
-
-        model = json.loads(jar.read(name))
-        textures = model.get("textures")
-        if not isinstance(textures, dict):
-            continue
-
-        changed = False
-        for key, value in textures.items():
-            if not isinstance(value, str) or value.startswith("#"):
-                continue
-            normalized = value.removeprefix("minecraft:")
-            if normalized in shared_textures:
-                textures[key] = "block/ryo"
-                redirects += 1
-                changed = True
-
-        if changed:
-            out_path = output_dir / name
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-            out_path.write_text(json.dumps(model, separators=(",", ":")), encoding="utf-8")
-
-    return redirects
 
 
 def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path, target_size: int) -> dict[str, int]:
@@ -241,8 +216,7 @@ def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path,
     generated = 0
     copied_mcmeta = 0
     animated = 0
-    shared_opaque = 0
-    shared_textures: set[str] = set()
+    static_opaque = 0
 
     with zipfile.ZipFile(minecraft_jar) as jar:
         names = set(jar.namelist())
@@ -263,11 +237,8 @@ def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path,
 
             mcmeta_name = f"{name}.mcmeta"
             has_mcmeta = mcmeta_name in names
-            relative_texture = relative.removesuffix(".png")
             if is_static_opaque(vanilla, has_mcmeta):
-                shared_textures.add(f"block/{relative_texture}")
-                shared_opaque += 1
-                continue
+                static_opaque += 1
 
             frame_count = vanilla_frame_count(vanilla, has_mcmeta)
             frames: list[Image.Image] = []
@@ -303,7 +274,7 @@ def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path,
         shared_path = texture_root / "ryo.png"
         tile.save(shared_path)
         generated += 1
-        model_redirects = write_model_redirects(jar, output_dir, shared_textures)
+        clear_model_redirects(output_dir)
         generated_items = generate_item_textures(jar, names, output_dir, tile)
         generated_hud = generate_hud_textures(jar, output_dir, tile)
         generated_shields = generate_shield_textures(jar, output_dir, tile)
@@ -312,8 +283,9 @@ def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path,
         "generated_png": generated,
         "copied_mcmeta": copied_mcmeta,
         "animated_textures": animated,
-        "shared_static_opaque_textures": shared_opaque,
-        "model_texture_redirects": model_redirects,
+        "static_opaque_textures": static_opaque,
+        "model_texture_redirects": 0,
+        "ryo_block_overlay_strength": RYO_BLOCK_OVERLAY_STRENGTH,
         "generated_early_survival_items": generated_items,
         "generated_hud_textures": generated_hud,
         "generated_shield_textures": generated_shields,

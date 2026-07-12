@@ -7,11 +7,10 @@ from pathlib import Path
 
 from PIL import Image, ImageChops
 
-from generate_ryo_textures import build_clear_glass, CLEAR_GLASS_ALPHA, EARLY_SURVIVAL_ITEMS, GUI_PREFIX, HUD_TEXTURES, ITEM_PREFIX, SHIELD_TEXTURES
+from generate_ryo_textures import build_clear_glass, build_frame, CLEAR_GLASS_ALPHA, EARLY_SURVIVAL_ITEMS, GUI_PREFIX, HUD_TEXTURES, ITEM_PREFIX, SHIELD_TEXTURES
 
 
 BLOCK_PREFIX = "assets/minecraft/textures/block/"
-MODEL_PREFIXES = ("assets/minecraft/models/block/", "assets/minecraft/models/item/")
 
 
 def main() -> None:
@@ -25,8 +24,7 @@ def main() -> None:
     checked = 0
     animated = 0
     transparent = 0
-    shared_opaque = 0
-    model_redirects = 0
+    static_opaque = 0
     checked_items = 0
     checked_hud = 0
     checked_shields = 0
@@ -46,13 +44,10 @@ def main() -> None:
                 vanilla.load()
 
             has_mcmeta = f"{name}.mcmeta" in names
-            static_opaque = not has_mcmeta and vanilla.getchannel("A").getextrema() == (255, 255)
+            is_opaque = not has_mcmeta and vanilla.getchannel("A").getextrema() == (255, 255)
             generated_path = generated_root / relative
-            if static_opaque:
-                shared_opaque += 1
-                if generated_path.exists():
-                    failures.append(f"redundant static opaque texture: {relative}")
-                continue
+            if is_opaque:
+                static_opaque += 1
 
             if not generated_path.exists():
                 failures.append(f"missing generated texture: {relative}")
@@ -60,6 +55,22 @@ def main() -> None:
 
             generated = Image.open(generated_path).convert("RGBA")
             generated.load()
+            tile = Image.open(generated_root / "ryo.png").convert("RGBA")
+            if relative == "glass.png":
+                expected = build_clear_glass(tile, vanilla, generated.width)
+            elif has_mcmeta:
+                frame_size = vanilla.width
+                frames = [
+                    build_frame(tile, vanilla.crop((0, index * frame_size, vanilla.width, (index + 1) * frame_size)), generated.width)
+                    for index in range(vanilla.height // frame_size)
+                ]
+                expected = Image.new("RGBA", (generated.width, generated.width * len(frames)))
+                for index, frame in enumerate(frames):
+                    expected.alpha_composite(frame, (0, index * generated.width))
+            else:
+                expected = build_frame(tile, vanilla, generated.width)
+            if ImageChops.difference(expected, generated).getbbox():
+                failures.append(f"vanilla/Ryo blend mismatch: {relative}")
             if has_mcmeta:
                 animated += 1
                 if not generated_path.with_suffix(generated_path.suffix + ".mcmeta").exists():
@@ -78,8 +89,7 @@ def main() -> None:
                 if relative == "glass.png":
                     if generated_alpha != (CLEAR_GLASS_ALPHA, CLEAR_GLASS_ALPHA):
                         failures.append(f"clear glass is not uniformly tinted: {generated_alpha}")
-                    shared_tile = Image.open(generated_root / "ryo.png").convert("RGBA")
-                    expected_glass = build_clear_glass(shared_tile, vanilla, generated.width)
+                    expected_glass = build_clear_glass(tile, vanilla, generated.width)
                     if ImageChops.difference(expected_glass, generated).getbbox():
                         failures.append("clear glass lost vanilla color shading")
                 else:
@@ -112,30 +122,9 @@ def main() -> None:
             if any(edge.getextrema() != (255, 255) for edge in edge_alpha):
                 failures.append("shared opaque texture has a transparent edge")
 
-        shared_texture_ids = {
-            f"block/{name.removeprefix(BLOCK_PREFIX).removesuffix('.png')}"
-            for name in texture_names
-            if f"{name}.mcmeta" not in names
-            and Image.open(jar.open(name)).convert("RGBA").getchannel("A").getextrema() == (255, 255)
-        }
-        for name in sorted(jar.namelist()):
-            if not name.endswith(".json") or not name.startswith(MODEL_PREFIXES):
-                continue
-            model = json.loads(jar.read(name))
-            textures = model.get("textures", {})
-            if not isinstance(textures, dict):
-                continue
-            for value in textures.values():
-                if isinstance(value, str) and value.removeprefix("minecraft:") in shared_texture_ids:
-                    override_path = args.resources_dir / name
-                    if not override_path.exists():
-                        failures.append(f"missing model redirect for shared texture: {name}")
-                        break
-                    override = json.loads(override_path.read_text(encoding="utf-8"))
-                    if "block/ryo" not in override.get("textures", {}).values():
-                        failures.append(f"model redirect missing shared texture: {name}")
-                    else:
-                        model_redirects += 1
+        model_root = args.resources_dir / "assets" / "minecraft" / "models"
+        if any(model_root.rglob("*.json")):
+            failures.append("legacy shared-texture model redirects remain")
 
         item_root = args.resources_dir / "assets" / "minecraft" / "textures" / "item"
         item_hashes: set[bytes] = set()
@@ -213,8 +202,8 @@ def main() -> None:
         "checked_png": checked,
         "animated_with_mcmeta": animated,
         "transparent_vanilla_textures": transparent,
-        "shared_static_opaque_textures": shared_opaque,
-        "model_redirects": model_redirects,
+        "static_opaque_textures": static_opaque,
+        "model_redirects": 0,
         "checked_early_survival_items": checked_items,
         "checked_hud_textures": checked_hud,
         "checked_shield_textures": checked_shields,

@@ -36,9 +36,9 @@ Place the source art at:
 source/ryo.png
 ```
 
-The generator keeps the source readable by creating 512x512 block textures instead of shrinking the image to vanilla 16x16. It removes a near-solid black export strip at the source image's bottom edge, then center-crops the non-square art to a fully opaque square instead of surrounding it with transparent letterboxing. This prevents both sky-colored gaps and a false black seam between solid blocks. Static opaque blocks share that one 512x512 Ryo texture through generated vanilla-model redirects, so Minecraft does not allocate hundreds of identical atlas entries. Transparent and animated textures remain separate 512px files: plants, panes, rails, dust, overlays, and animated materials keep their vanilla cutout shapes and frame behavior. The important proof path is Minecraft's own framebuffer screenshots, because external desktop/window capture can show a false white OpenGL surface on this machine.
+The generator keeps the source readable by creating 512x512 block textures instead of shrinking the image to vanilla 16x16. It removes a near-solid black export strip at the source image's bottom edge, then center-crops the non-square art to a fully opaque square instead of surrounding it with transparent letterboxing. This prevents both sky-colored gaps and a false black seam between solid blocks. Every vanilla block texture is upscaled with nearest-neighbor filtering, then blended with an 88% Ryo overlay. This leaves its wood grain, ore flecks, stone pattern, and similar material cues faintly visible while Ryo remains the dominant image. Animated and transparent blocks retain their native frame behavior and alpha shapes. The important proof path is Minecraft's own framebuffer screenshots, because external desktop/window capture can show a false white OpenGL surface on this machine.
 
-Transparent block masks use nearest-neighbor scaling, preserving every vanilla alpha value without filtered fringe pixels. Doors, trapdoors, glass, stained glass, panes, plants, rails, and similar cutout/translucent assets therefore show Ryo inside their exact native silhouettes. Opaque doors, fences, fence gates, walls, and other shaped blocks use Minecraft's original model geometry while their face references redirect to the shared Ryo tile.
+Transparent block masks use nearest-neighbor scaling, preserving every vanilla alpha value without filtered fringe pixels. Doors, trapdoors, glass, stained glass, panes, plants, rails, and similar cutout/translucent assets therefore retain their exact native silhouettes and faint material patterns. Opaque doors, fences, fence gates, walls, and other shaped blocks retain Minecraft's original model geometry and now resolve to their own Ryo-tinted vanilla texture.
 
 Clear full glass is the intentional exception: `glass.png` has no opaque alpha frame and uses a uniform alpha of 56/255 across the Ryo image. Vanilla glass's original light/dark pixel structure is retained as color shading blended into the Ryo colors, so the material still reads as Minecraft glass without becoming a framed window. Stained glass and panes retain their vanilla alpha structures.
 
@@ -49,7 +49,7 @@ python tools/generate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\v
 python tools/validate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
 ```
 
-Validation rejects missing coverage, altered item/HUD dimensions, changed alpha silhouettes, blank assets, excessive duplicate item output, and edits outside the approved hotbar regions.
+Validation rejects missing per-block coverage, incorrect Ryo/vanilla blend output, altered alpha silhouettes, legacy shared-texture model redirects, blank assets, excessive duplicate item output, and edits outside the approved hotbar regions.
 
 ## Build
 
