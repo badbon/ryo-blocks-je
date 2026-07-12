@@ -22,8 +22,16 @@ CHEST_TEXTURES = (
 )
 CHEST_PREFIX = "assets/minecraft/textures/entity/chest/"
 PLAYER_TEXTURE = "assets/ryo-blocks/textures/entity/player/nijika.png"
-CHEST_FRONT_PANELS = ((14, 19, 28, 33), (28, 19, 42, 33))
 CHEST_LATCH = (0, 0, 6, 5)
+
+# The bottom model starts at UV (0, 19). The old generator incorrectly used
+# the two 14x14 top/bottom faces at (14, 19) and (28, 19), which put Nijika on
+# horizontal surfaces. The actual outward face is the south face of the body:
+# model Z=14, where the latch is placed. Double-chest halves are one pixel
+# wider, so their front UV rectangle is shifted two pixels to the right.
+SINGLE_CHEST_TEXTURES = frozenset({"christmas.png", "ender.png", "normal.png", "trapped.png"})
+SINGLE_FRONT_PANEL = (42, 33, 56, 43)
+DOUBLE_FRONT_PANEL = (44, 33, 58, 43)
 
 
 def verify_slim_skin(skin: Image.Image) -> None:
@@ -35,9 +43,21 @@ def verify_slim_skin(skin: Image.Image) -> None:
         raise ValueError("Nijika skin must use the slim-arm player layout")
 
 
-def shade_with_template(portrait: Image.Image, template: Image.Image) -> Image.Image:
-    themed = ImageOps.fit(portrait, template.size, method=Image.Resampling.NEAREST).convert("RGB")
+def tint_template(template: Image.Image) -> Image.Image:
+    """Keep vanilla material shading while giving the chest Nijika's warm palette."""
     light = template.convert("L")
+    base = (218, 174, 66)
+    channels = tuple(
+        ImageMath.eval("convert(light * value / 255, 'L')", light=light, value=value)
+        for value in base
+    )
+    return Image.merge("RGBA", (*channels, template.getchannel("A")))
+
+
+def shade_portrait(portrait: Image.Image, panel_template: Image.Image) -> Image.Image:
+    """Render one upright face with the light/shadow detail of its body panel."""
+    themed = ImageOps.fit(portrait, panel_template.size, method=Image.Resampling.NEAREST).convert("RGB")
+    light = panel_template.convert("L")
     channels = tuple(
         ImageMath.eval(
             "convert(channel * (155 + light * 55 / 100) / 255, 'L')",
@@ -46,20 +66,22 @@ def shade_with_template(portrait: Image.Image, template: Image.Image) -> Image.I
         )
         for channel in themed.split()
     )
-    return Image.merge("RGBA", (*channels, template.getchannel("A")))
+    return Image.merge("RGBA", (*channels, panel_template.getchannel("A")))
 
 
-def make_chest_texture(template: Image.Image, skin: Image.Image) -> Image.Image:
+def front_panel_for(texture_name: str) -> tuple[int, int, int, int]:
+    return SINGLE_FRONT_PANEL if texture_name in SINGLE_CHEST_TEXTURES else DOUBLE_FRONT_PANEL
+
+
+def make_chest_texture(template: Image.Image, skin: Image.Image, texture_name: str) -> Image.Image:
     portrait = skin.crop((8, 8, 16, 16))
-    output = shade_with_template(portrait, template)
+    output = tint_template(template)
 
-    # The single-chest UV uses these two panels for the front/back body. Using
-    # a full, pixel-clean portrait on both makes every chest read as Nijika from
-    # normal player angles without distorting the skin across hinges or the lid.
-    for box in CHEST_FRONT_PANELS:
-        panel_template = template.crop(box)
-        panel = shade_with_template(portrait, panel_template)
-        output.alpha_composite(panel, (box[0], box[1]))
+    box = front_panel_for(texture_name)
+    panel_template = template.crop(box)
+    # This vertical body face is rendered upright by Minecraft's chest model.
+    # Do not rotate or mirror it: the UV itself handles the world-facing turns.
+    output.alpha_composite(shade_portrait(portrait, panel_template), (box[0], box[1]))
 
     # Keep the tiny latch's vanilla contrast so opening direction remains clear.
     output.alpha_composite(template.crop(CHEST_LATCH), (0, 0))
@@ -90,7 +112,12 @@ def generate_assets(minecraft_jar: Path, skin_path: Path, output_dir: Path) -> d
             with jar.open(f"{CHEST_PREFIX}{texture}") as raw:
                 template = Image.open(raw).convert("RGBA")
                 template.load()
-            make_chest_texture(template, skin).save(chest_output / texture)
+            generated = make_chest_texture(template, skin, texture)
+            if generated.size != template.size:
+                raise ValueError(f"generated chest dimensions changed: {texture}")
+            if generated.getchannel("A").tobytes() != template.getchannel("A").tobytes():
+                raise ValueError(f"generated chest alpha changed: {texture}")
+            generated.save(chest_output / texture)
 
     return {"nijika_skin": 1, "nijika_chests": len(CHEST_TEXTURES)}
 

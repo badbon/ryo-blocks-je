@@ -14,7 +14,7 @@ The production mixin configuration must declare `client-ryo-blocks-refmap.json`.
 
 The bundled Nijika skin is rendered on a slim player model for villagers and wandering traders. This is client-only: professions, trades, AI, hitboxes, sounds, and world data remain vanilla. Zombie villagers are intentionally not replaced so hostile mobs remain immediately readable.
 
-All vanilla chest variants use generated Nijika chest textures. The chest generator keeps each vanilla chest UV layout and latch, places a clear Nijika portrait on the main body panels, and carries the vanilla template's light/shadow detail across the remaining surfaces. Generate the assets with:
+All vanilla chest variants use generated Nijika chest textures. The chest generator preserves each exact vanilla UV layout, transparency edge, and latch. It applies a clean Nijika-toned material treatment, then places one upright Nijika face only on the rendered front body panel. Single chests and each double-chest half use their own verified UV coordinates, so the face never lands on a lid, underside, or overlapping side panel. Generate the assets with:
 
 ```powershell
 python tools/generate_nijika_assets.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
