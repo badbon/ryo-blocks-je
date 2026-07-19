@@ -34,6 +34,50 @@ EARLY_SURVIVAL_ITEMS = {
     "mushroom_stew.png", "flint_and_steel.png", "shears.png", "fishing_rod.png",
 }
 
+ITEM_OVERLAY_STRENGTH = 0.50
+HIGH_RISK_ITEM_OVERLAY_STRENGTH = 0.20
+
+# These are renderer/UI layers rather than standalone inventory items. Keeping
+# them native preserves dynamically tinted leather, potion, egg, and recipe-slot cues.
+ITEM_TEMPLATE_TEXTURES = {
+    "empty_armor_slot_boots.png", "empty_armor_slot_chestplate.png",
+    "empty_armor_slot_helmet.png", "empty_armor_slot_leggings.png",
+    "empty_armor_slot_shield.png", "empty_slot_amethyst_shard.png",
+    "empty_slot_axe.png", "empty_slot_diamond.png", "empty_slot_emerald.png",
+    "empty_slot_hoe.png", "empty_slot_ingot.png", "empty_slot_lapis_lazuli.png",
+    "empty_slot_pickaxe.png", "empty_slot_quartz.png", "empty_slot_redstone_dust.png",
+    "empty_slot_shovel.png", "empty_slot_smithing_template_armor_trim.png",
+    "empty_slot_smithing_template_netherite_upgrade.png", "empty_slot_sword.png",
+    "firework_star_overlay.png", "leather_boots_overlay.png",
+    "leather_chestplate_overlay.png", "leather_helmet_overlay.png",
+    "leather_leggings_overlay.png", "potion_overlay.png", "spawn_egg_overlay.png",
+}
+
+HIGH_RISK_ITEM_TEXTURES = {
+    "glass_bottle.png", "experience_bottle.png", "honey_bottle.png", "dragon_breath.png",
+    "filled_map.png", "filled_map_markings.png", "map.png",
+    "arrow.png", "spectral_arrow.png", "tipped_arrow_base.png", "tipped_arrow_head.png",
+    "redstone.png", "bone_meal.png", "light.png",
+    "beef.png", "cooked_beef.png", "chicken.png", "cooked_chicken.png",
+    "mutton.png", "cooked_mutton.png", "porkchop.png", "cooked_porkchop.png",
+    "rabbit.png", "cooked_rabbit.png", "rabbit_stew.png", "mushroom_stew.png",
+    "suspicious_stew.png", "cod.png", "cooked_cod.png", "salmon.png", "cooked_salmon.png",
+    "sweet_berries.png", "glow_berries.png", "dried_kelp.png", "kelp.png",
+    # Ore drops and the resources refined from them retain their familiar colour cues.
+    "coal.png", "charcoal.png", "diamond.png", "emerald.png", "lapis_lazuli.png",
+    "raw_copper.png", "raw_gold.png", "raw_iron.png", "copper_ingot.png",
+    "gold_ingot.png", "iron_ingot.png", "gold_nugget.png", "iron_nugget.png",
+    "redstone.png", "quartz.png", "amethyst_shard.png", "netherite_scrap.png",
+    "netherite_ingot.png", "clay_ball.png", "flint.png", "prismarine_shard.png",
+    "prismarine_crystals.png", "echo_shard.png",
+}
+
+HIGH_RISK_ITEM_PREFIXES = ("clock_", "compass_", "recovery_compass_", "crossbow_", "light_")
+HIGH_RISK_ITEM_SUFFIXES = (
+    "_bucket.png", "_spawn_egg.png", "_dye.png", "_smithing_template.png",
+    "_pottery_sherd.png", "_banner_pattern.png",
+)
+
 HUD_TEXTURES = ("icons.png",)
 SHIELD_TEXTURES = ("shield_base.png", "shield_base_nopattern.png")
 
@@ -113,22 +157,72 @@ def ryo_masked_texture(tile: Image.Image, vanilla: Image.Image) -> Image.Image:
     return Image.merge("RGBA", (*shaded, vanilla.getchannel("A")))
 
 
-def generate_item_textures(jar: zipfile.ZipFile, names: set[str], output_dir: Path, tile: Image.Image) -> int:
+def vanilla_item_texture_names(names: set[str]) -> list[str]:
+    return sorted(
+        Path(name).name
+        for name in names
+        if name.startswith(ITEM_PREFIX)
+        and name.endswith(".png")
+        and Path(name).name not in ITEM_TEMPLATE_TEXTURES
+    )
+
+
+def is_high_risk_item_texture(relative: str) -> bool:
+    return (
+        relative in HIGH_RISK_ITEM_TEXTURES
+        or relative.startswith(HIGH_RISK_ITEM_PREFIXES)
+        or relative.endswith(HIGH_RISK_ITEM_SUFFIXES)
+    )
+
+
+def ryo_overlay_texture(tile: Image.Image, vanilla: Image.Image, strength: float) -> Image.Image:
+    """Blend Ryo's cutout over a vanilla item without changing its silhouette."""
+    vanilla = vanilla.convert("RGBA")
+    ryo = ImageOps.fit(tile, vanilla.size, method=Image.Resampling.LANCZOS)
+    luminance = vanilla.convert("L")
+    shaded = tuple(
+        ImageMath.eval(
+            "convert(channel * (140 + light * 65 / 100) / 255, 'L')",
+            channel=channel,
+            light=luminance,
+        )
+        for channel in ryo.convert("RGB").split()
+    )
+    overlay_alpha = ryo.getchannel("A").point(lambda value: round(value * strength))
+    blended = Image.composite(Image.merge("RGB", shaded), vanilla.convert("RGB"), overlay_alpha)
+    return Image.merge("RGBA", (*blended.split(), vanilla.getchannel("A")))
+
+
+def generate_item_textures(
+    jar: zipfile.ZipFile,
+    names: set[str],
+    output_dir: Path,
+    tile: Image.Image,
+) -> tuple[int, int]:
     item_root = output_dir / "assets" / "minecraft" / "textures" / "item"
     reset_directory(item_root)
 
     generated = 0
-    for relative in sorted(EARLY_SURVIVAL_ITEMS):
+    high_risk_generated = 0
+    for relative in vanilla_item_texture_names(names):
         name = f"{ITEM_PREFIX}{relative}"
-        if name not in names:
-            raise ValueError(f"Minecraft jar is missing required early-survival item: {relative}")
         with jar.open(name) as raw:
             vanilla = Image.open(raw).convert("RGBA")
             vanilla.load()
-        themed = ryo_masked_texture(tile, vanilla)
+        high_risk = is_high_risk_item_texture(relative)
+        themed = ryo_overlay_texture(
+            tile,
+            vanilla,
+            HIGH_RISK_ITEM_OVERLAY_STRENGTH if high_risk else ITEM_OVERLAY_STRENGTH,
+        )
         themed.save(item_root / relative)
+        metadata = f"{name}.mcmeta"
+        if metadata in names:
+            with jar.open(metadata) as raw:
+                (item_root / f"{relative}.mcmeta").write_bytes(raw.read())
         generated += 1
-    return generated
+        high_risk_generated += high_risk
+    return generated, high_risk_generated
 
 
 def generate_hud_textures(jar: zipfile.ZipFile, output_dir: Path, tile: Image.Image) -> int:
@@ -174,16 +268,25 @@ def clear_model_redirects(output_dir: Path) -> None:
     reset_directory(model_root)
 
 
-def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path, target_size: int) -> dict[str, int | str]:
+def generate_textures(
+    minecraft_jar: Path,
+    source_image: Path,
+    item_overlay_source: Path,
+    output_dir: Path,
+    target_size: int,
+) -> dict[str, int | str | float]:
     if not minecraft_jar.exists():
         raise FileNotFoundError(f"Minecraft jar not found: {minecraft_jar}")
     if not source_image.exists():
         raise FileNotFoundError(f"Source image not found: {source_image}")
+    if not item_overlay_source.exists():
+        raise FileNotFoundError(f"Item overlay source not found: {item_overlay_source}")
 
     texture_root = output_dir / "assets" / "minecraft" / "textures" / "block"
     reset_directory(texture_root)
 
     tile = square_source(source_image, target_size)
+    item_overlay_tile = shader_overlay_source(item_overlay_source, target_size)
 
     with zipfile.ZipFile(minecraft_jar) as jar:
         names = set(jar.namelist())
@@ -192,7 +295,7 @@ def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path,
             for name in names
         )
         clear_model_redirects(output_dir)
-        generated_items = generate_item_textures(jar, names, output_dir, tile)
+        generated_items, high_risk_items = generate_item_textures(jar, names, output_dir, item_overlay_tile)
         generated_hud = generate_hud_textures(jar, output_dir, tile)
         generated_shields = generate_shield_textures(jar, output_dir, tile)
 
@@ -201,7 +304,10 @@ def generate_textures(minecraft_jar: Path, source_image: Path, output_dir: Path,
         "vanilla_block_textures": vanilla_block_textures,
         "model_texture_redirects": 0,
         "block_tint_renderer": "iris_shaderpack",
-        "generated_early_survival_items": generated_items,
+        "generated_item_textures": generated_items,
+        "high_risk_item_textures": high_risk_items,
+        "item_overlay_strength": ITEM_OVERLAY_STRENGTH,
+        "high_risk_item_overlay_strength": HIGH_RISK_ITEM_OVERLAY_STRENGTH,
         "generated_hud_textures": generated_hud,
         "generated_shield_textures": generated_shields,
         "target_texture_size": target_size,
@@ -215,11 +321,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate Ryo item/HUD assets while block tinting is handled by Iris.")
     parser.add_argument("--minecraft-jar", required=True, type=Path)
     parser.add_argument("--source-image", default=Path("source/ryo.png"), type=Path)
+    parser.add_argument("--item-overlay-source", default=Path("source/ryo-block-overlay.png"), type=Path)
     parser.add_argument("--output-dir", default=Path("src/main/resources/resourcepacks/ryo_blocks"), type=Path)
     parser.add_argument("--target-size", default=512, type=int)
     args = parser.parse_args()
 
-    summary = generate_textures(args.minecraft_jar, args.source_image, args.output_dir, args.target_size)
+    summary = generate_textures(
+        args.minecraft_jar,
+        args.source_image,
+        args.item_overlay_source,
+        args.output_dir,
+        args.target_size,
+    )
     print(json.dumps(summary, indent=2))
 
 

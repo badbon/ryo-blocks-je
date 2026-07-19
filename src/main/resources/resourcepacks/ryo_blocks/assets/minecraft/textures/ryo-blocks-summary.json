@@ -3,7 +3,10 @@
   "vanilla_block_textures": 928,
   "model_texture_redirects": 0,
   "block_tint_renderer": "iris_shaderpack",
-  "generated_early_survival_items": 88,
+  "generated_item_textures": 556,
+  "high_risk_item_textures": 278,
+  "item_overlay_strength": 0.5,
+  "high_risk_item_overlay_strength": 0.2,
   "generated_hud_textures": 2,
   "generated_shield_textures": 2,
   "target_texture_size": 512

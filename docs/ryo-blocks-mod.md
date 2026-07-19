@@ -2,7 +2,7 @@
 
 Private Fabric mod that force-enables a bundled resource pack overriding vanilla Minecraft 1.20.1 block textures with the supplied Ryo image. Install Fabric API alongside the jar.
 
-The first inventory pass also themes the survival HUD and common early-game item textures. Items keep their vanilla 16x16 alpha silhouettes and light/dark edge structure, with the same Ryo source image sampled inside those silhouettes. This keeps tools, food, armor, buckets, and resources recognizable without adding custom items, names, recipes, menus, commands, or world data. HUD icons preserve their vanilla state silhouettes and dimensions; only the hotbar regions of `widgets.png` are changed, so menu buttons and container screens remain vanilla.
+All vanilla item textures are Ryo-themed while keeping their native dimensions, alpha silhouettes, animation metadata, and light/dark edge structure. The transparent Ryo character cutout blends over ordinary items at 50%; stateful, colour-coded, ambiguous-food, mining-resource, ore-drop, and template/pattern items use 20% coverage where appropriate. Dynamic UI layers such as empty slots, potion liquid overlays, spawn-egg overlays, leather colour overlays, and firework-star overlays remain vanilla so their gameplay cues stay readable. This adds no custom items, names, recipes, menus, commands, or world data. HUD icons preserve their vanilla state silhouettes and dimensions; only the hotbar regions of `widgets.png` are changed, so menu buttons and container screens remain vanilla.
 
 ## Forced Player Skin
 
