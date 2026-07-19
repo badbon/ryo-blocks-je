@@ -85,6 +85,17 @@ def square_source(source_path: Path, target_size: int) -> Image.Image:
     return tile
 
 
+def shader_overlay_source(source_path: Path, target_size: int) -> Image.Image:
+    """Fit the shader overlay while preserving transparent background pixels."""
+    source = trim_export_border(Image.open(source_path).convert("RGBA"))
+    return ImageOps.fit(
+        source,
+        (target_size, target_size),
+        method=Image.Resampling.LANCZOS,
+        centering=(0.5, 0.5),
+    )
+
+
 def ryo_masked_texture(tile: Image.Image, vanilla: Image.Image) -> Image.Image:
     """Put the one Ryo image inside a vanilla silhouette while retaining edge detail."""
     vanilla = vanilla.convert("RGBA")

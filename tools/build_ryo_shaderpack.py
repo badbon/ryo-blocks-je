@@ -4,7 +4,7 @@ import argparse
 import zipfile
 from pathlib import Path
 
-from generate_ryo_textures import square_source
+from generate_ryo_textures import shader_overlay_source
 
 
 SHADER_SOURCE = Path("source/ryo-vanilla-tint")
@@ -24,7 +24,7 @@ def build_shaderpack(source_image: Path, output: Path, target_size: int) -> dict
         raise FileNotFoundError(f"Ryo source image not found: {source_image}")
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    tile = square_source(source_image, target_size)
+    tile = shader_overlay_source(source_image, target_size)
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for relative in REQUIRED_SHADER_FILES:
             archive.write(SHADER_SOURCE / relative, relative.as_posix())
@@ -36,7 +36,7 @@ def build_shaderpack(source_image: Path, output: Path, target_size: int) -> dict
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the low-memory Iris Ryo terrain shader pack.")
-    parser.add_argument("--source-image", default=Path("source/ryo.png"), type=Path)
+    parser.add_argument("--source-image", default=Path("source/ryo-block-overlay.png"), type=Path)
     parser.add_argument("--output", default=Path("build/Ryo-Vanilla-Tint.zip"), type=Path)
     parser.add_argument("--target-size", default=512, type=int)
     args = parser.parse_args()

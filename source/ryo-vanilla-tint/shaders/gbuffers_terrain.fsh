@@ -1,6 +1,6 @@
 #version 330 compatibility
 
-const float RYO_OVERLAY_STRENGTH = 0.88;
+const float RYO_OVERLAY_STRENGTH = 0.50;
 const float VANILLA_SPRITE_SIZE = 16.0;
 
 uniform sampler2D gtexture;
@@ -26,8 +26,11 @@ void main() {
     // vanilla sprite without allocating a high-resolution copy per block.
     vec2 atlasPixels = atlasCoord * vec2(textureSize(gtexture, 0));
     vec2 ryoCoord = fract(atlasPixels / VANILLA_SPRITE_SIZE);
-    vec3 ryo = texture(ryoTexture, ryoCoord).rgb;
+    vec4 ryo = texture(ryoTexture, ryoCoord);
 
-    vec4 tinted = vec4(mix(vanilla.rgb, ryo, RYO_OVERLAY_STRENGTH), vanilla.a);
+    // The cutout's transparent background leaves native block material fully
+    // visible while the character blends at the configured overlay strength.
+    float overlayStrength = RYO_OVERLAY_STRENGTH * ryo.a;
+    vec4 tinted = vec4(mix(vanilla.rgb, ryo.rgb, overlayStrength), vanilla.a);
     color = tinted * texture(lightmap, lightmapCoord);
 }
