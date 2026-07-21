@@ -37,6 +37,7 @@ public final class PaSanEndermanRenderer extends MobEntityRenderer<EndermanEntit
         int light
     ) {
         this.getModel().setCarryingBlock(enderman.getCarriedBlock() != null);
+        this.getModel().setAngry(enderman.isAngry());
         super.render(enderman, entityYaw, tickDelta, matrices, vertexConsumers, light);
     }
 
