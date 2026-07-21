@@ -11,13 +11,11 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.util.Identifier;
 
 public final class RyoBlocksClient implements ClientModInitializer {
-    private static final String MOD_ID = "ryo-blocks";
-
     @Override
     public void onInitializeClient() {
-        FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent(container ->
+        FabricLoader.getInstance().getModContainer(RyoBlocks.MOD_ID).ifPresent(container ->
             ResourceManagerHelper.registerBuiltinResourcePack(
-                new Identifier(MOD_ID, "ryo_blocks"),
+                new Identifier(RyoBlocks.MOD_ID, "ryo_blocks"),
                 container,
                 ResourcePackActivationType.ALWAYS_ENABLED
             )
@@ -25,5 +23,6 @@ public final class RyoBlocksClient implements ClientModInitializer {
         EntityRendererRegistry.register(EntityType.VILLAGER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.WANDERING_TRADER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.ENDERMAN, PaSanEndermanRenderer::new);
+        EntityRendererRegistry.register(RyoBlocks.PA_SAN_ENDERMAN, PaSanEndermanRenderer::new);
     }
 }

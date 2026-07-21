@@ -11,11 +11,11 @@ import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.util.math.RotationAxis;
 
 /** Renders the carried state with Minecraft's native Enderman block transform. */
-public final class PaSanEndermanBlockFeatureRenderer extends FeatureRenderer<EndermanEntity, PaSanEndermanModel> {
+public final class PaSanEndermanBlockFeatureRenderer<T extends EndermanEntity> extends FeatureRenderer<T, PaSanEndermanModel<T>> {
     private final BlockRenderManager blockRenderManager;
 
     public PaSanEndermanBlockFeatureRenderer(
-        FeatureRendererContext<EndermanEntity, PaSanEndermanModel> context,
+        FeatureRendererContext<T, PaSanEndermanModel<T>> context,
         BlockRenderManager blockRenderManager
     ) {
         super(context);
@@ -27,7 +27,7 @@ public final class PaSanEndermanBlockFeatureRenderer extends FeatureRenderer<End
         MatrixStack matrices,
         VertexConsumerProvider vertexConsumers,
         int light,
-        EndermanEntity enderman,
+        T enderman,
         float limbAngle,
         float limbDistance,
         float tickDelta,

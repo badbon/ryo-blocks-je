@@ -8,7 +8,7 @@ import net.minecraft.util.math.MathHelper;
 /**
  * A slim player rig driven by the vanilla Enderman animation rules.
  */
-public final class PaSanEndermanModel extends PlayerEntityModel<EndermanEntity> {
+public final class PaSanEndermanModel<T extends EndermanEntity> extends PlayerEntityModel<T> {
     private boolean carryingBlock;
     private boolean angry;
 
@@ -25,7 +25,7 @@ public final class PaSanEndermanModel extends PlayerEntityModel<EndermanEntity> 
     }
 
     @Override
-    public void setAngles(EndermanEntity enderman, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
+    public void setAngles(T enderman, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
         super.setAngles(enderman, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
 
         // Keep the normal player silhouette, but match EndermanEntityModel's

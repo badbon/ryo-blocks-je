@@ -12,24 +12,23 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 
 /**
- * Client-only appearance replacement. Enderman AI, hitboxes, teleporting,
- * carrying rules, sounds, and world state remain entirely vanilla.
+ * Renders both vanilla Endermen and the registered Pa-san Enderman subtype.
  */
-public final class PaSanEndermanRenderer extends MobEntityRenderer<EndermanEntity, PaSanEndermanModel> {
+public final class PaSanEndermanRenderer<T extends EndermanEntity> extends MobEntityRenderer<T, PaSanEndermanModel<T>> {
     private final Random random = Random.create();
 
     public PaSanEndermanRenderer(EntityRendererFactory.Context context) {
         super(
             context,
-            new PaSanEndermanModel(context.getPart(EntityModelLayers.PLAYER_SLIM), PaSanAssets.SLIM_ARMS),
+            new PaSanEndermanModel<>(context.getPart(EntityModelLayers.PLAYER_SLIM), PaSanAssets.SLIM_ARMS),
             0.5F
         );
-        this.addFeature(new PaSanEndermanBlockFeatureRenderer(this, context.getBlockRenderManager()));
+        this.addFeature(new PaSanEndermanBlockFeatureRenderer<>(this, context.getBlockRenderManager()));
     }
 
     @Override
     public void render(
-        EndermanEntity enderman,
+        T enderman,
         float entityYaw,
         float tickDelta,
         MatrixStack matrices,
@@ -42,7 +41,7 @@ public final class PaSanEndermanRenderer extends MobEntityRenderer<EndermanEntit
     }
 
     @Override
-    public Vec3d getPositionOffset(EndermanEntity enderman, float tickDelta) {
+    public Vec3d getPositionOffset(T enderman, float tickDelta) {
         if (enderman.isAngry()) {
             return new Vec3d(this.random.nextGaussian() * 0.02D, 0.0D, this.random.nextGaussian() * 0.02D);
         }
@@ -50,7 +49,7 @@ public final class PaSanEndermanRenderer extends MobEntityRenderer<EndermanEntit
     }
 
     @Override
-    public Identifier getTexture(EndermanEntity enderman) {
+    public Identifier getTexture(T enderman) {
         return PaSanAssets.PLAYER_TEXTURE;
     }
 }
