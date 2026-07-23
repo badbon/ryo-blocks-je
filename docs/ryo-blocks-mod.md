@@ -26,7 +26,9 @@ Every Enderman is rendered client-side as the supplied Pa-san slim-player model.
 
 ## Bocchi Wolves
 
-Wild, angry, and tamed wolves retain Minecraft 1.20.1's native model, UV layout, facial details, state differences, resolution, and transparency. Their white/grey fur shading is remapped to Bocchi's tracksuit pink, anchored at `#F6A9AF`, the dominant unshaded jacket fill sampled from the official TV anime character artwork. Dark eyes, nose, mouth, angry red eyes, and other protected details stay vanilla. `wolf_collar.png` is intentionally not overridden, so tamed-wolf collars remain independently dyeable.
+Wild, angry, and tamed wolves retain Minecraft 1.20.1's native model, UV layout, facial details, state differences, resolution, and transparency. Their white/grey fur shading is remapped to Bocchi's tracksuit pink, anchored at `#F6A9AF`, the dominant unshaded jacket fill sampled from the official TV anime character artwork. Dark eyes, nose, mouth, angry red eyes, and other protected details stay vanilla.
+
+The default red tamed-wolf collar becomes a shaded Bocchi-pink band with one centered blue pixel (`#5092BD`) and one centered yellow pixel (`#B6973E`), sampled from the supplied hair-clip reference. The mod applies this as a client-only render substitution so Minecraft's red dye multiplication cannot destroy the accent colors. Dyeing the collar any non-red color restores the untouched vanilla collar texture and dye behavior.
 
 Generate and validate the three fur textures with:
 

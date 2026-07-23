@@ -8,10 +8,17 @@ from pathlib import Path
 from PIL import Image, ImageChops
 
 from generate_bocchi_wolf_assets import (
+    BOCCHI_CLIP_BLUE,
+    BOCCHI_CLIP_YELLOW,
+    BOCCHI_COLLAR_TEXTURE,
     BOCCHI_TRACKSUIT_PINK,
+    COLLAR_BLUE_PIXEL,
+    COLLAR_YELLOW_PIXEL,
+    VANILLA_COLLAR_TEXTURE,
     WOLF_PREFIX,
     WOLF_TEXTURES,
     is_fur_pixel,
+    recolor_collar,
     recolor_fur,
 )
 
@@ -22,6 +29,11 @@ def main() -> None:
     parser.add_argument(
         "--resources-dir",
         default=Path("src/main/resources/resourcepacks/ryo_blocks"),
+        type=Path,
+    )
+    parser.add_argument(
+        "--mod-resources-dir",
+        default=Path("src/main/resources"),
         type=Path,
     )
     args = parser.parse_args()
@@ -40,7 +52,7 @@ def main() -> None:
             f"wolf override set mismatch: expected {sorted(expected_files)}, got {sorted(actual_files)}"
         )
     if (wolf_root / "wolf_collar.png").exists():
-        failures.append("wolf collar must remain vanilla and dyeable")
+        failures.append("vanilla wolf collar override would break non-red dye colors")
 
     with zipfile.ZipFile(args.minecraft_jar) as jar:
         for texture_name in WOLF_TEXTURES:
@@ -72,6 +84,32 @@ def main() -> None:
                     break
             checked_textures += 1
 
+        with jar.open(VANILLA_COLLAR_TEXTURE) as raw:
+            vanilla_collar = Image.open(raw).convert("RGBA")
+            vanilla_collar.load()
+
+    collar_path = args.mod_resources_dir / BOCCHI_COLLAR_TEXTURE
+    if not collar_path.exists():
+        failures.append(f"missing Bocchi collar texture: {collar_path}")
+        generated_collar = None
+    else:
+        generated_collar = Image.open(collar_path).convert("RGBA")
+        generated_collar.load()
+        expected_collar = recolor_collar(vanilla_collar)
+
+        if generated_collar.size != vanilla_collar.size:
+            failures.append("Bocchi collar dimensions changed")
+        if ImageChops.difference(
+            vanilla_collar.getchannel("A"), generated_collar.getchannel("A")
+        ).getbbox():
+            failures.append("Bocchi collar UV silhouette changed")
+        if ImageChops.difference(expected_collar, generated_collar).getbbox():
+            failures.append("Bocchi collar generation is not deterministic")
+        if generated_collar.getpixel(COLLAR_BLUE_PIXEL)[:3] != BOCCHI_CLIP_BLUE:
+            failures.append("Bocchi blue clip pixel is missing or has the wrong color")
+        if generated_collar.getpixel(COLLAR_YELLOW_PIXEL)[:3] != BOCCHI_CLIP_YELLOW:
+            failures.append("Bocchi yellow clip pixel is missing or has the wrong color")
+
     if checked_fur_pixels < 2_000:
         failures.append(f"too few fur pixels were recolored: {checked_fur_pixels}")
     if exact_anchor_pixels < 300:
@@ -85,7 +123,10 @@ def main() -> None:
         "checked_fur_pixels": checked_fur_pixels,
         "exact_base_pink_pixels": exact_anchor_pixels,
         "distinct_pink_fur_shades": len(themed_fur_shades),
-        "vanilla_collar_preserved": not (wolf_root / "wolf_collar.png").exists(),
+        "bocchi_collar_checked": generated_collar is not None,
+        "bocchi_clip_blue": "#5092BD",
+        "bocchi_clip_yellow": "#B6973E",
+        "other_collar_dyes_preserved": not (wolf_root / "wolf_collar.png").exists(),
         "failures": failures,
     }
     print(json.dumps(result, indent=2))

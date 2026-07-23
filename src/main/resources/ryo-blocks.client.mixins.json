@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "AbstractClientPlayerEntityMixin",
-    "PlayerListEntryMixin"
+    "PlayerListEntryMixin",
+    "WolfCollarFeatureRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
