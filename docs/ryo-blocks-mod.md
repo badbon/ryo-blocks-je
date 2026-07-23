@@ -24,6 +24,17 @@ python tools/generate_nijika_assets.py --minecraft-jar "$env:APPDATA\.minecraft\
 
 Every Enderman is rendered client-side as the supplied Pa-san slim-player model. Its AI, hitbox, teleporting, block pickup and placement, sounds, particles, aggression, and world data are still Minecraft's native Enderman behavior. The custom renderer preserves vanilla angry-camera jitter and the exact native carried-block transform; Pa-san's arms use the matching carrying pose, so a picked-up block sits in her raised hands rather than clipping through the torso. Standard biped combat movement remains active and the player model intentionally has no Enderman mouth or glowing-eye overlay. The source skin is `source/pa-san-player-skin.png`; its packaged copy is `assets/ryo-blocks/textures/entity/player/pa_san.png`.
 
+## Bocchi Wolves
+
+Wild, angry, and tamed wolves retain Minecraft 1.20.1's native model, UV layout, facial details, state differences, resolution, and transparency. Their white/grey fur shading is remapped to Bocchi's tracksuit pink, anchored at `#F6A9AF`, the dominant unshaded jacket fill sampled from the official TV anime character artwork. Dark eyes, nose, mouth, angry red eyes, and other protected details stay vanilla. `wolf_collar.png` is intentionally not overridden, so tamed-wolf collars remain independently dyeable.
+
+Generate and validate the three fur textures with:
+
+```powershell
+python tools/generate_bocchi_wolf_assets.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
+python tools/validate_bocchi_wolf_assets.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
+```
+
 ## Ryo Edition Title
 
 The main menu keeps Minecraft's original logo and replaces only the native `edition.png` subtitle directly under it with the approved generated title. Its transparent source is stored at `source/ryo-edition-title.png`; compose it into Minecraft's fixed 512x64 title-subtitle slot with:
