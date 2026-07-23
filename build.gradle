@@ -52,3 +52,30 @@ jar {
         rename { "${it}_${project.base.archivesName.get()}" }
     }
 }
+
+tasks.register("verifyWolfCollarMixinRefmap") {
+    dependsOn remapJar
+
+    doLast {
+        def outputJar = remapJar.archiveFile.get().asFile
+        def zip = new java.util.zip.ZipFile(outputJar)
+        try {
+            def entry = zip.getEntry("client-ryo-blocks-refmap.json")
+            if (entry == null) {
+                throw new GradleException("Missing client mixin refmap in ${outputJar.name}")
+            }
+
+            def refmap = zip.getInputStream(entry).getText("UTF-8")
+            def expectedTarget = "Lnet/minecraft/class_1006;method_23199"
+            if (!refmap.contains(expectedTarget)) {
+                throw new GradleException(
+                    "Wolf collar mixin does not target the runtime WolfCollarFeatureRenderer owner"
+                )
+            }
+        } finally {
+            zip.close()
+        }
+    }
+}
+
+check.dependsOn verifyWolfCollarMixinRefmap

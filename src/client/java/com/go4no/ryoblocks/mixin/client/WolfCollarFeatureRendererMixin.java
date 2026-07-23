@@ -21,7 +21,7 @@ public abstract class WolfCollarFeatureRendererMixin {
         method = "render",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/render/entity/feature/FeatureRenderer;renderModel("
+            target = "Lnet/minecraft/client/render/entity/feature/WolfCollarFeatureRenderer;renderModel("
                 + "Lnet/minecraft/client/render/entity/model/EntityModel;"
                 + "Lnet/minecraft/util/Identifier;"
                 + "Lnet/minecraft/client/util/math/MatrixStack;"
