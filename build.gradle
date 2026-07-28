@@ -78,4 +78,35 @@ tasks.register("verifyWolfCollarMixinRefmap") {
     }
 }
 
-check.dependsOn verifyWolfCollarMixinRefmap
+tasks.register("verifyVanillaServerCompatibility") {
+    dependsOn remapJar
+
+    doLast {
+        def outputJar = remapJar.archiveFile.get().asFile
+        def zip = new java.util.zip.ZipFile(outputJar)
+        try {
+            def metadataEntry = zip.getEntry("fabric.mod.json")
+            if (metadataEntry == null) {
+                throw new GradleException("Missing fabric.mod.json in ${outputJar.name}")
+            }
+
+            def metadata = new groovy.json.JsonSlurper().parse(
+                zip.getInputStream(metadataEntry),
+                "UTF-8"
+            )
+            if (metadata.environment != "client") {
+                throw new GradleException("Ryo Blocks must remain client-only")
+            }
+            if (metadata.entrypoints?.main) {
+                throw new GradleException("Server/common entrypoint would break vanilla-only behavior")
+            }
+            if (zip.getEntry("com/go4no/ryoblocks/entity/PaSanEndermanEntity.class") != null) {
+                throw new GradleException("Custom Pa-san entity must not ship in the client-only artifact")
+            }
+        } finally {
+            zip.close()
+        }
+    }
+}
+
+check.dependsOn verifyWolfCollarMixinRefmap, verifyVanillaServerCompatibility

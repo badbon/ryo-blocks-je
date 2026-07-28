@@ -24,6 +24,8 @@ python tools/generate_nijika_assets.py --minecraft-jar "$env:APPDATA\.minecraft\
 
 Every Enderman is rendered client-side as the supplied Pa-san slim-player model. Its AI, hitbox, teleporting, block pickup and placement, sounds, particles, aggression, and world data are still Minecraft's native Enderman behavior. The custom renderer preserves vanilla angry-camera jitter and the exact native carried-block transform; Pa-san's arms use the matching carrying pose, so a picked-up block sits in her raised hands rather than clipping through the torso. Standard biped combat movement remains active and the player model intentionally has no Enderman mouth or glowing-eye overlay. The source skin is `source/pa-san-player-skin.png`; its packaged copy is `assets/ryo-blocks/textures/entity/player/pa_san.png`.
 
+No custom entity or server behavior is registered. Vanilla and unmodded Fabric servers remain compatible, and dedicated servers do not need the mod.
+
 ## Bocchi Wolves
 
 Wild, angry, and tamed wolves retain Minecraft 1.20.1's native model, UV layout, facial details, state differences, resolution, and transparency. Their white/grey fur shading is remapped to Bocchi's tracksuit pink, anchored at `#F6A9AF`, the dominant unshaded jacket fill sampled from the official TV anime character artwork. Dark eyes, nose, mouth, angry red eyes, and other protected details stay vanilla.

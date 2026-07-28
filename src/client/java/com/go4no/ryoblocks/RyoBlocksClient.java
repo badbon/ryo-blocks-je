@@ -23,6 +23,5 @@ public final class RyoBlocksClient implements ClientModInitializer {
         EntityRendererRegistry.register(EntityType.VILLAGER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.WANDERING_TRADER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.ENDERMAN, PaSanEndermanRenderer::new);
-        EntityRendererRegistry.register(RyoBlocks.PA_SAN_ENDERMAN, PaSanEndermanRenderer::new);
     }
 }

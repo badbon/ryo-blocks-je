@@ -3,17 +3,14 @@
   "id": "ryo-blocks",
   "version": "${version}",
   "name": "Ryo Blocks",
-  "description": "Private joke mod: Ryo textures plus Pa-san Endermen.",
+  "description": "Ryo-themed Minecraft visuals, characters and mobs.",
   "authors": [
     "Go4No"
   ],
   "contact": {},
   "license": "All-Rights-Reserved",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
-    "main": [
-      "com.go4no.ryoblocks.RyoBlocks"
-    ],
     "client": [
       "com.go4no.ryoblocks.RyoBlocksClient"
     ]
@@ -23,9 +20,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.15.0",
-    "fabric-biome-api-v1": "*",
-    "fabric-object-builder-api-v1": "*",
-    "fabric-resource-loader-v0": "*",
+    "fabric-api": "*",
     "minecraft": "~1.20.1",
     "java": ">=17"
   }

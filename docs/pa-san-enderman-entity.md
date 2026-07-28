@@ -1,19 +1,10 @@
 # Pa-san Enderman
 
-`ryo-blocks:pa_san_enderman` is a direct `EndermanEntity` subclass. It keeps
-vanilla AI, targeting, teleporting, block carrying, combat, sounds, drops, and
-NBT behavior without reimplementing any of those systems. It also registers the
-same attributes and dark ground-spawn restriction as `minecraft:enderman`, and
-uses the vanilla Enderman loot table.
+Ryo Blocks replaces only the client renderer for `minecraft:enderman`.
+Spawning, AI, targeting, teleporting, block carrying, combat, sounds, drops,
+hitboxes, networking and saved data remain vanilla.
 
-At biome load time, every natural `minecraft:enderman` spawn entry is replaced
-with the Pa-san type using the original entry's weight, group sizes, and spawn
-cost. This keeps normal spawning behavior intact across the Overworld, Nether,
-and End.
-
-Existing Endermen and explicit `minecraft:enderman` summons are not rewritten,
-which keeps old saves safe. They still use the Pa-san renderer. New Pa-san
-entities can be summoned with `/summon ryo-blocks:pa_san_enderman`.
-
-Because this adds a real entity type, multiplayer servers and their clients
-must both install the same Ryo Blocks version.
+The mod registers no custom entity or server entrypoint. A Ryo client can join
+vanilla or Fabric servers that do not have Ryo Blocks installed. Installing the
+JAR on a dedicated server is unnecessary; Fabric Loader skips it because the
+mod is declared client-only.
