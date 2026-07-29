@@ -2,7 +2,7 @@
   "generated_block_textures": 0,
   "vanilla_block_textures": 928,
   "model_texture_redirects": 0,
-  "block_tint_renderer": "iris_shaderpack",
+  "block_tint_renderer": "minecraft_core_shader",
   "generated_item_textures": 556,
   "high_risk_item_textures": 278,
   "item_overlay_strength": 0.5,

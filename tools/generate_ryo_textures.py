@@ -303,7 +303,7 @@ def generate_textures(
         "generated_block_textures": 0,
         "vanilla_block_textures": vanilla_block_textures,
         "model_texture_redirects": 0,
-        "block_tint_renderer": "iris_shaderpack",
+        "block_tint_renderer": "minecraft_core_shader",
         "generated_item_textures": generated_items,
         "high_risk_item_textures": high_risk_items,
         "item_overlay_strength": ITEM_OVERLAY_STRENGTH,
@@ -318,7 +318,7 @@ def generate_textures(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate Ryo item/HUD assets while block tinting is handled by Iris.")
+    parser = argparse.ArgumentParser(description="Generate Ryo item/HUD assets while block tinting is handled by jar-contained core shaders.")
     parser.add_argument("--minecraft-jar", required=True, type=Path)
     parser.add_argument("--source-image", default=Path("source/ryo.png"), type=Path)
     parser.add_argument("--item-overlay-source", default=Path("source/ryo-block-overlay.png"), type=Path)

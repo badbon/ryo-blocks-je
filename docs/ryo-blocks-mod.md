@@ -1,6 +1,6 @@
 # Ryo Blocks Mod
 
-Private Fabric mod that force-enables a bundled resource pack overriding vanilla Minecraft 1.20.1 block textures with the supplied Ryo image. Install Fabric API alongside the jar.
+Private Fabric mod that force-enables a bundled resource pack tinting vanilla Minecraft 1.20.1 blocks with the supplied Ryo image. Install Fabric API alongside the jar.
 
 All vanilla item textures are Ryo-themed while keeping their native dimensions, alpha silhouettes, animation metadata, and light/dark edge structure. The transparent Ryo character cutout blends over ordinary items at 50%; stateful, colour-coded, ambiguous-food, mining-resource, ore-drop, and template/pattern items use 20% coverage where appropriate. Dynamic UI layers such as empty slots, potion liquid overlays, spawn-egg overlays, leather colour overlays, and firework-star overlays remain vanilla so their gameplay cues stay readable. This adds no custom items, names, recipes, menus, commands, or world data. HUD icons preserve their vanilla state silhouettes and dimensions; only the hotbar regions of `widgets.png` are changed, so menu buttons and container screens remain vanilla.
 
@@ -55,7 +55,7 @@ Place the source art at:
 source/ryo.png
 ```
 
-The generator keeps `source/ryo.png` readable for the Ryo item/HUD assets. Block tinting is rendered separately by the bundled Iris shader pack using the transparent character cutout at `source/ryo-block-overlay.png`: Minecraft keeps every native block texture in its normal atlas, while the shader samples one shared 512x512 Ryo texture. Character pixels blend at 50% strength; transparent background pixels leave the native material fully visible. This retains wood grain, ore flecks, stone pattern, and similar material cues without allocating a 512px texture for every block. Animated and transparent blocks retain their native frame behavior and alpha shapes. The important proof path is Minecraft's own framebuffer screenshots, because external desktop/window capture can show a false white OpenGL surface on this machine.
+The generator keeps `source/ryo.png` readable for the Ryo item/HUD assets. Block tinting is rendered by jar-contained Minecraft 1.20.1 core terrain shader overrides using the transparent character cutout at `source/ryo-block-overlay.png`: Minecraft keeps every native block texture in its normal atlas, while the shader samples one shared Ryo texture. Character pixels blend at 50% strength; transparent background pixels leave the native material fully visible. This retains wood grain, ore flecks, stone pattern, and similar material cues without allocating a high-resolution texture for every block. Animated and transparent blocks retain their native frame behavior and alpha shapes. The important proof path is Minecraft's own framebuffer screenshots, because external desktop/window capture can show a false white OpenGL surface on this machine.
 
 The shader samples Minecraft's untouched native atlas, so doors, trapdoors, glass, stained glass, panes, plants, rails, and similar cutout/translucent assets retain their native silhouettes, shading, and animation behavior. Opaque doors, fences, fence gates, walls, and other shaped blocks retain their original models and texture cues while receiving the shared Ryo overlay at render time.
 
@@ -66,15 +66,13 @@ Clear full glass is the intentional exception: `glass.png` has no opaque alpha f
 ```powershell
 python tools/generate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar" --source-image source\ryo.png --target-size 512
 python tools/validate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
-python tools/build_ryo_shaderpack.py
-python tools/validate_ryo_shaderpack.py
 ```
 
-Validation rejects residual block texture overrides or model redirects, missing item/HUD assets, altered item silhouettes, and an invalid shader pack. The shader archive validator also proves it binds exactly one shared Ryo sampler from the authoritative source while retaining access to Minecraft's native block atlas.
+Validation rejects residual block texture overrides or model redirects, missing item/HUD assets, altered item silhouettes, missing core shader overrides, or a missing shared terrain overlay texture.
 
 ## Low-Memory Block Tint
 
-`source/ryo-vanilla-tint` contains a minimal Iris shader pack for Minecraft 1.20.1 with Sodium 0.5.13 and Indium 1.0.36. Its terrain pass samples `gtexture` (Minecraft's native block atlas) and `ryoTexture` (one generated 512px Ryo image) on the GPU. No high-resolution per-block asset is shipped in the Ryo resource pack. Build it with `tools/build_ryo_shaderpack.py`, then install the resulting `build/Ryo-Vanilla-Tint.zip` in the profile's `shaderpacks` folder and enable it through Iris.
+The built-in resource pack overrides Minecraft 1.20.1's terrain core shaders for solid, cutout, cutout-mipped, and translucent block render types. Each pass samples `Sampler0` (Minecraft's native block atlas) and `RyoSampler` (one bundled Ryo overlay texture) on the GPU. No Iris shaderpack, Sodium, OptiFine, or high-resolution per-block asset is required.
 
 ## Build
 

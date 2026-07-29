@@ -21,6 +21,13 @@ from generate_ryo_textures import (
 
 
 BLOCK_PREFIX = "assets/minecraft/textures/block/"
+CORE_SHADER_PREFIX = Path("assets/minecraft/shaders/core")
+CORE_SHADER_STEMS = (
+    "rendertype_solid",
+    "rendertype_cutout",
+    "rendertype_cutout_mipped",
+    "rendertype_translucent",
+)
 
 
 def main() -> None:
@@ -50,11 +57,30 @@ def main() -> None:
             for name in names
         )
         if any(generated_root.rglob("*.png")):
-            failures.append("block texture overrides remain; Iris must sample vanilla's native atlas")
+            failures.append("block texture overrides remain; core shaders must sample vanilla's native atlas")
 
         model_root = args.resources_dir / "assets" / "minecraft" / "models"
         if any(model_root.rglob("*.json")):
             failures.append("legacy shared-texture model redirects remain")
+
+        shader_root = args.resources_dir / CORE_SHADER_PREFIX
+        for stem in CORE_SHADER_STEMS:
+            for suffix in (".json", ".vsh", ".fsh"):
+                shader_path = shader_root / f"{stem}{suffix}"
+                if not shader_path.exists():
+                    failures.append(f"missing core shader override: {stem}{suffix}")
+                    continue
+                text = shader_path.read_text(encoding="utf-8")
+                if suffix == ".json" and "RyoSampler" not in text:
+                    failures.append(f"core shader JSON does not declare RyoSampler: {stem}{suffix}")
+                if suffix == ".fsh":
+                    for required in ("RyoSampler", "RYO_OVERLAY_STRENGTH = 0.50", "VANILLA_SPRITE_SIZE = 16.0"):
+                        if required not in text:
+                            failures.append(f"core shader fragment is missing {required}: {stem}{suffix}")
+
+        overlay_path = args.resources_dir / "assets" / "ryo-blocks" / "textures" / "terrain" / "ryo_overlay.png"
+        if not overlay_path.exists():
+            failures.append("missing shared terrain overlay texture")
 
         item_root = args.resources_dir / "assets" / "minecraft" / "textures" / "item"
         item_hashes: set[bytes] = set()
