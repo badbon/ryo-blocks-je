@@ -7,7 +7,8 @@
     "AbstractClientPlayerEntityMixin",
     "GameRendererMixin",
     "PlayerListEntryMixin",
-    "WolfCollarFeatureRendererMixin"
+    "WolfCollarFeatureRendererMixin",
+    "WindowMixin"
   ],
   "injectors": {
     "defaultRequire": 1

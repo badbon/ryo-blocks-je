@@ -13,6 +13,14 @@ base {
 loom {
     splitEnvironmentSourceSets()
 
+    runs {
+        client {
+            if (project.hasProperty("visualProof")) {
+                property "ryoBlocks.visualProof", "true"
+            }
+        }
+    }
+
     mods {
         "ryo-blocks" {
             sourceSet sourceSets.main

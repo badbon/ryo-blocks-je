@@ -81,6 +81,12 @@ HIGH_RISK_ITEM_SUFFIXES = (
 HUD_TEXTURES = ("icons.png",)
 SHIELD_TEXTURES = ("shield_base.png", "shield_base_nopattern.png")
 
+KITA_LAVA_TEXTURES = {
+    "lava_still.png": 254,
+    "lava_flow.png": 253,
+}
+KITA_LAVA_RESOURCE = Path("assets/ryo-blocks/textures/terrain/kita_lava.png")
+
 
 def reset_directory(path: Path) -> None:
     """Remove generated output despite short-lived Windows file release races."""
@@ -147,8 +153,11 @@ def ryo_masked_texture(tile: Image.Image, vanilla: Image.Image) -> Image.Image:
     luminance = vanilla.convert("L")
     themed_channels = ryo.convert("RGB").split()
     shaded = tuple(
-        ImageMath.eval(
-            "convert(channel * (140 + light * 65 / 100) / 255, 'L')",
+        ImageMath.lambda_eval(
+            lambda args: args["convert"](
+                args["channel"] * (140 + args["light"] * 65 / 100) / 255,
+                "L",
+            ),
             channel=channel,
             light=luminance,
         )
@@ -181,8 +190,11 @@ def ryo_overlay_texture(tile: Image.Image, vanilla: Image.Image, strength: float
     ryo = ImageOps.fit(tile, vanilla.size, method=Image.Resampling.LANCZOS)
     luminance = vanilla.convert("L")
     shaded = tuple(
-        ImageMath.eval(
-            "convert(channel * (140 + light * 65 / 100) / 255, 'L')",
+        ImageMath.lambda_eval(
+            lambda args: args["convert"](
+                args["channel"] * (140 + args["light"] * 65 / 100) / 255,
+                "L",
+            ),
             channel=channel,
             light=luminance,
         )
@@ -268,10 +280,39 @@ def clear_model_redirects(output_dir: Path) -> None:
     reset_directory(model_root)
 
 
+def generate_kita_lava_assets(
+    jar: zipfile.ZipFile,
+    output_dir: Path,
+    source_path: Path,
+) -> int:
+    """Keep vanilla lava animation while marking its pixels for the Kita shader path."""
+    block_root = output_dir / "assets" / "minecraft" / "textures" / "block"
+    block_root.mkdir(parents=True, exist_ok=True)
+
+    for relative, marker_alpha in KITA_LAVA_TEXTURES.items():
+        name = f"{BLOCK_PREFIX}{relative}"
+        with jar.open(name) as raw:
+            vanilla = Image.open(raw).convert("RGBA")
+            vanilla.load()
+        red, green, blue, _ = vanilla.split()
+        marker = Image.new("L", vanilla.size, marker_alpha)
+        Image.merge("RGBA", (red, green, blue, marker)).save(block_root / relative)
+
+        metadata = f"{name}.mcmeta"
+        with jar.open(metadata) as raw:
+            (block_root / f"{relative}.mcmeta").write_bytes(raw.read())
+
+    portrait_path = output_dir / KITA_LAVA_RESOURCE
+    portrait_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_path, portrait_path)
+    return len(KITA_LAVA_TEXTURES)
+
+
 def generate_textures(
     minecraft_jar: Path,
     source_image: Path,
     item_overlay_source: Path,
+    kita_lava_source: Path,
     output_dir: Path,
     target_size: int,
 ) -> dict[str, int | str | float]:
@@ -281,6 +322,8 @@ def generate_textures(
         raise FileNotFoundError(f"Source image not found: {source_image}")
     if not item_overlay_source.exists():
         raise FileNotFoundError(f"Item overlay source not found: {item_overlay_source}")
+    if not kita_lava_source.exists():
+        raise FileNotFoundError(f"Kita lava source not found: {kita_lava_source}")
 
     texture_root = output_dir / "assets" / "minecraft" / "textures" / "block"
     reset_directory(texture_root)
@@ -295,15 +338,17 @@ def generate_textures(
             for name in names
         )
         clear_model_redirects(output_dir)
+        generated_kita_lava = generate_kita_lava_assets(jar, output_dir, kita_lava_source)
         generated_items, high_risk_items = generate_item_textures(jar, names, output_dir, item_overlay_tile)
         generated_hud = generate_hud_textures(jar, output_dir, tile)
         generated_shields = generate_shield_textures(jar, output_dir, tile)
 
     summary = {
-        "generated_block_textures": 0,
+        "generated_block_textures": generated_kita_lava,
         "vanilla_block_textures": vanilla_block_textures,
         "model_texture_redirects": 0,
         "block_tint_renderer": "minecraft_core_shader",
+        "kita_lava_renderer": "marked_vanilla_lava_core_shader",
         "generated_item_textures": generated_items,
         "high_risk_item_textures": high_risk_items,
         "item_overlay_strength": ITEM_OVERLAY_STRENGTH,
@@ -322,6 +367,7 @@ def main() -> None:
     parser.add_argument("--minecraft-jar", required=True, type=Path)
     parser.add_argument("--source-image", default=Path("source/ryo.png"), type=Path)
     parser.add_argument("--item-overlay-source", default=Path("source/ryo-block-overlay.png"), type=Path)
+    parser.add_argument("--kita-lava-source", default=Path("source/kita-lava-cutout.png"), type=Path)
     parser.add_argument("--output-dir", default=Path("src/main/resources/resourcepacks/ryo_blocks"), type=Path)
     parser.add_argument("--target-size", default=512, type=int)
     args = parser.parse_args()
@@ -330,6 +376,7 @@ def main() -> None:
         args.minecraft_jar,
         args.source_image,
         args.item_overlay_source,
+        args.kita_lava_source,
         args.output_dir,
         args.target_size,
     )

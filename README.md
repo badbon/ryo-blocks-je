@@ -9,6 +9,7 @@
 - Nijika villagers and chests
 - Pa-san Enderman with vanilla behavior
 - Bocchi pink wolves and collar
+- Kita appears directly on animated lava and lavafalls
 - RyoCraft Minecraft Ryo Edition main menu (subtle main menu title change :D)
 
 Client-side Fabric mod for Minecraft 1.20.1. Works on vanilla servers. Requires Fabric.

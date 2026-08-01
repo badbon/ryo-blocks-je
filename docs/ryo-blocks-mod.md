@@ -39,6 +39,12 @@ python tools/generate_bocchi_wolf_assets.py --minecraft-jar "$env:APPDATA\.minec
 python tools/validate_bocchi_wolf_assets.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
 ```
 
+## Kita Lava
+
+Lava and flowing lava remain Minecraft's native animated fluid, lighting, damage, flow, collision, particles, and sounds. Their two native atlas sprites carry otherwise-unused alpha markers so the terrain shaders can identify lava without hardcoding unstable atlas coordinates. On those marked pixels, the Ryo overlay is skipped and the accepted transparent Kita portrait from `source/kita-lava-cutout.png` is composited in full color over the moving lava. The portrait remains sharp because it is sampled from one high-resolution texture rather than baked into Minecraft's 16x16 lava frames.
+
+`source/kita-lava.png` is the exact user-supplied frame. `source/kita-lava-chroma.png` is the accepted background-replacement output and `source/kita-lava-cutout.png` is its locally background-removed derivative. The packaged portrait must remain byte-identical to that accepted cutout.
+
 ## Ryo Edition Title
 
 The main menu keeps Minecraft's original logo and replaces only the native `edition.png` subtitle directly under it with the approved generated title. Its transparent source is stored at `source/ryo-edition-title.png`; compose it into Minecraft's fixed 512x64 title-subtitle slot with:
@@ -55,7 +61,7 @@ Place the source art at:
 source/ryo.png
 ```
 
-The generator keeps `source/ryo.png` readable for the Ryo item/HUD assets. Block tinting is rendered by jar-contained Minecraft 1.20.1 core terrain shader overrides using the transparent character cutout at `source/ryo-block-overlay.png`: Minecraft keeps every native block texture in its normal atlas, while the shader samples one shared Ryo texture. Character pixels blend at 50% strength; transparent background pixels leave the native material fully visible. This retains wood grain, ore flecks, stone pattern, and similar material cues without allocating a high-resolution texture for every block. Animated and transparent blocks retain their native frame behavior and alpha shapes. The important proof path is Minecraft's own framebuffer screenshots, because external desktop/window capture can show a false white OpenGL surface on this machine.
+The generator keeps `source/ryo.png` readable for the Ryo item/HUD assets. Block tinting is rendered by jar-contained Minecraft 1.20.1 core terrain shader overrides using the transparent character cutout at `source/ryo-block-overlay.png`: Minecraft keeps every native block texture in its normal atlas, while the shader samples one shared Ryo texture. Character pixels blend at 50% strength; transparent background pixels leave the native material fully visible. This retains wood grain, ore flecks, stone pattern, and similar material cues without allocating a high-resolution texture for every block. Animated and transparent blocks retain their native frame behavior and alpha shapes. Kita lava is the intentional lava-only exception described above. The important proof path is Minecraft's own framebuffer screenshots, because external desktop/window capture can show a false white OpenGL surface on this machine.
 
 The shader samples Minecraft's untouched native atlas, so doors, trapdoors, glass, stained glass, panes, plants, rails, and similar cutout/translucent assets retain their native silhouettes, shading, and animation behavior. Opaque doors, fences, fence gates, walls, and other shaped blocks retain their original models and texture cues while receiving the shared Ryo overlay at render time.
 
@@ -68,7 +74,7 @@ python tools/generate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\v
 python tools/validate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
 ```
 
-Validation rejects residual block texture overrides or model redirects, missing item/HUD assets, altered item silhouettes, missing core shader overrides, or a missing shared terrain overlay texture.
+Validation rejects block texture overrides other than the two byte-checked Kita lava markers, model redirects, missing item/HUD assets, altered item silhouettes, missing core shader overrides, or missing shared Ryo/Kita terrain textures.
 
 ## Low-Memory Block Tint
 

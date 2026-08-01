@@ -21,6 +21,8 @@ out vec4 vertexColor;
 out vec4 lightColor;
 out vec2 texCoord0;
 out vec4 normal;
+out vec3 worldPosition;
+out vec3 worldNormal;
 
 void main() {
     vec3 pos = Position + ChunkOffset;
@@ -31,4 +33,6 @@ void main() {
     lightColor = minecraft_sample_lightmap(Sampler2, UV2);
     texCoord0 = UV0;
     normal = ProjMat * ModelViewMat * vec4(Normal, 0.0);
+    worldPosition = pos;
+    worldNormal = Normal;
 }
