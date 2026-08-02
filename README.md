@@ -14,6 +14,9 @@
 
 Client-side Fabric mod for Minecraft 1.20.1. Works on vanilla servers. Requires Fabric.
 
+## Installation
+Place .jar from Releases section of this GitHub repo in your fabric profile /mods/ folder.
+
 ## Support
 
 If you want to support me and my work, check out my indie games on Steam :D
