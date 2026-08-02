@@ -114,7 +114,7 @@ def main() -> None:
                         "KitaSampler",
                         "RYO_OVERLAY_STRENGTH = 0.50",
                         "VANILLA_SPRITE_SIZE = 16.0",
-                        "KITA_LAVA_OVERLAY_STRENGTH = 0.94",
+                        "KITA_LAVA_OVERLAY_STRENGTH = 0.80",
                         "KITA_STILL_MARKER_ALPHA = 254.0 / 255.0",
                         "KITA_FLOW_MARKER_ALPHA = 253.0 / 255.0",
                         "KITA_FACE_WORLD_SCALE = 1.0",

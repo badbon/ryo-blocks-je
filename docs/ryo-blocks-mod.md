@@ -41,7 +41,7 @@ python tools/validate_bocchi_wolf_assets.py --minecraft-jar "$env:APPDATA\.minec
 
 ## Kita Lava
 
-Lava and flowing lava remain Minecraft's native animated fluid, lighting, damage, flow, collision, particles, and sounds. Their two native atlas sprites carry otherwise-unused alpha markers so the terrain shaders can identify lava without hardcoding unstable atlas coordinates. On those marked pixels, the Ryo overlay is skipped and the accepted transparent Kita portrait from `source/kita-lava-cutout.png` is composited in full color over the moving lava. The portrait remains sharp because it is sampled from one high-resolution texture rather than baked into Minecraft's 16x16 lava frames.
+Lava and flowing lava retain Minecraft's native animated fluid behavior: lighting, damage, flow, collision, particles, and sounds. Their two native atlas sprites carry otherwise-unused alpha markers so the terrain shaders can identify lava without hardcoding unstable atlas coordinates. On those marked pixels, the Ryo overlay is skipped and the accepted transparent Kita portrait from `source/kita-lava-cutout.png` is composited at 80% strength over the moving lava, leaving 20% of the native animated lava visible. The portrait remains sharp because it is sampled from one high-resolution texture rather than baked into Minecraft's 16x16 lava frames.
 
 `source/kita-lava.png` is the exact user-supplied frame. `source/kita-lava-chroma.png` is the accepted background-replacement output and `source/kita-lava-cutout.png` is its locally background-removed derivative. The packaged portrait must remain byte-identical to that accepted cutout.
 
