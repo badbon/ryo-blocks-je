@@ -101,7 +101,7 @@ $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
 The mod jar is written to:
 
 ```text
-build/libs/ryo-blocks-1.1.0.jar
+build/libs/ryo-blocks-1.2.0.jar
 ```
 
 ## Install
