@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "ryo_performance_harness",
+  "version": "${version}",
+  "name": "Ryo Performance Harness",
+  "environment": "client",
+  "entrypoints": { "client": ["com.go4no.ryoperformance.BenchmarkClient"] },
+  "mixins": ["ryo-performance-harness.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "minecraft": "~1.20.1",
+    "fabric-api-base": "*",
+    "fabric-lifecycle-events-v1": "*"
+  }
+}

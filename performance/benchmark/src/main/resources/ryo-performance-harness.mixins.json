@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "com.go4no.ryoperformance.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": ["MinecraftClientMixin", "MinecraftClientAccessor", "WindowMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

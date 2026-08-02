@@ -18,13 +18,12 @@ Mods directory: C:\Users\komputer\AppData\Roaming\.minecraft\ryo-blocks\mods
 Installed mods:
 
 ```text
-fabric-api-0.92.9+1.20.1.jar
 ryo-blocks-1.1.0.jar
 ```
 
 ## Standalone Ryo Block Tint
 
-The mod jar contains the Ryo terrain tint. Iris, Sodium, Indium, OptiFine, and a separate shaderpack are not required for Ryo blocks.
+The mod jar contains the Ryo terrain tint and the four Fabric API modules it uses. Install Fabric Loader for Minecraft 1.20.1, then place only `ryo-blocks-1.1.0.jar` in the profile's `mods` folder. Iris, Sodium, Indium, OptiFine, a separate Fabric API jar, and a separate shaderpack are not required for normal play.
 
 Ryo block tinting is performed by Minecraft 1.20.1 core terrain shader overrides inside the always-enabled bundled resource pack. The shaders sample Minecraft's native block atlas plus one shared Ryo texture, avoiding per-block texture allocation while keeping the jar drop-in for normal Fabric installs.
 

@@ -1,6 +1,7 @@
 .gradle/
 build/
 run/
+performance-runs/
 out/
 *.log
 hs_err_pid*

@@ -33,7 +33,10 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    modImplementation include(fabricApi.module("fabric-api-base", project.fabric_api_version))
+    modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", project.fabric_api_version))
+    modImplementation include(fabricApi.module("fabric-rendering-v1", project.fabric_api_version))
+    modImplementation include(fabricApi.module("fabric-resource-loader-v0", project.fabric_api_version))
 }
 
 processResources {
@@ -117,4 +120,86 @@ tasks.register("verifyVanillaServerCompatibility") {
     }
 }
 
-check.dependsOn verifyWolfCollarMixinRefmap, verifyVanillaServerCompatibility
+tasks.register("verifyStandaloneFabricModules") {
+    dependsOn remapJar
+
+    doLast {
+        def outputJar = remapJar.archiveFile.get().asFile
+        def expectedModuleIds = [
+            "fabric-api-base",
+            "fabric-lifecycle-events-v1",
+            "fabric-rendering-v1",
+            "fabric-resource-loader-v0"
+        ] as Set
+        def requiredProductEntries = [
+            "com/go4no/ryoblocks/RyoBlocksClient.class",
+            "com/go4no/ryoblocks/client/RyoTerrainShaders.class",
+            "com/go4no/ryoblocks/mixin/client/GameRendererMixin.class",
+            "resourcepacks/ryo_blocks/pack.mcmeta",
+            "resourcepacks/ryo_blocks/assets/minecraft/shaders/core/rendertype_solid.fsh",
+            "resourcepacks/ryo_blocks/assets/ryo-blocks/textures/terrain/ryo_overlay.png"
+        ]
+        def forbiddenArtifact = ~/(?i).*(iris|sodium|indium|optifine|shaderpack).*/
+        def zip = new java.util.zip.ZipFile(outputJar)
+        try {
+            def metadataEntry = zip.getEntry("fabric.mod.json")
+            if (metadataEntry == null) {
+                throw new GradleException("Missing root fabric.mod.json in ${outputJar.name}")
+            }
+            def metadata = new groovy.json.JsonSlurper().parse(zip.getInputStream(metadataEntry), "UTF-8")
+            def rootDependencyIds = (metadata.depends ?: [:]).keySet() as Set
+            def expectedRootDependencyIds = expectedModuleIds + ["fabricloader", "minecraft", "java"] as Set
+            if (rootDependencyIds != expectedRootDependencyIds) {
+                throw new GradleException("Root metadata must contain exactly ${expectedRootDependencyIds}, found ${rootDependencyIds}")
+            }
+
+            requiredProductEntries.each { entryName ->
+                if (zip.getEntry(entryName) == null) {
+                    throw new GradleException("Missing packaged product entry ${entryName}")
+                }
+            }
+
+            def nestedEntries = zip.entries().findAll { entry ->
+                !entry.directory && entry.name.startsWith("META-INF/jars/") && entry.name.endsWith(".jar")
+            }
+            if (nestedEntries.size() != expectedModuleIds.size()) {
+                throw new GradleException("Expected exactly ${expectedModuleIds.size()} nested module jars, found ${nestedEntries.size()}")
+            }
+
+            def nestedModuleIds = [] as Set
+            nestedEntries.each { nestedEntry ->
+                if (nestedEntry.name ==~ forbiddenArtifact) {
+                    throw new GradleException("Forbidden external runtime artifact in product jar: ${nestedEntry.name}")
+                }
+                def nestedZip = new java.util.zip.ZipInputStream(zip.getInputStream(nestedEntry))
+                try {
+                    def nestedMetadataCount = 0
+                    java.util.zip.ZipEntry entry
+                    while ((entry = nestedZip.nextEntry) != null) {
+                        if (entry.name == "fabric.mod.json") {
+                            nestedMetadataCount++
+                            def nestedMetadata = new groovy.json.JsonSlurper().parseText(new String(nestedZip.readAllBytes(), "UTF-8"))
+                            nestedModuleIds.add(nestedMetadata.id as String)
+                        }
+                    }
+                    if (nestedMetadataCount != 1) {
+                        throw new GradleException("Nested artifact ${nestedEntry.name} must contain exactly one fabric.mod.json, found ${nestedMetadataCount}")
+                    }
+                } finally {
+                    nestedZip.close()
+                }
+            }
+            if (nestedModuleIds.size() != expectedModuleIds.size() || nestedModuleIds != expectedModuleIds) {
+                throw new GradleException("Expected only nested Fabric API module IDs ${expectedModuleIds}, found ${nestedModuleIds}")
+            }
+
+            zip.entries().findAll { entry -> !entry.directory && entry.name ==~ forbiddenArtifact }.each { entry ->
+                throw new GradleException("Forbidden external runtime artifact in product jar: ${entry.name}")
+            }
+        } finally {
+            zip.close()
+        }
+    }
+}
+
+check.dependsOn verifyWolfCollarMixinRefmap, verifyVanillaServerCompatibility, verifyStandaloneFabricModules
