@@ -34,6 +34,7 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation include(fabricApi.module("fabric-api-base", project.fabric_api_version))
+    modImplementation include(fabricApi.module("fabric-blockrenderlayer-v1", project.fabric_api_version))
     modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", project.fabric_api_version))
     modImplementation include(fabricApi.module("fabric-rendering-v1", project.fabric_api_version))
     modImplementation include(fabricApi.module("fabric-resource-loader-v0", project.fabric_api_version))
@@ -127,6 +128,7 @@ tasks.register("verifyStandaloneFabricModules") {
         def outputJar = remapJar.archiveFile.get().asFile
         def expectedModuleIds = [
             "fabric-api-base",
+            "fabric-blockrenderlayer-v1",
             "fabric-lifecycle-events-v1",
             "fabric-rendering-v1",
             "fabric-resource-loader-v0"

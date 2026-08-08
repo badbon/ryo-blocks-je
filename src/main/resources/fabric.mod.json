@@ -21,6 +21,7 @@
   "depends": {
     "fabricloader": ">=0.15.0",
     "fabric-api-base": ">=0.4.32+1802ada577",
+    "fabric-blockrenderlayer-v1": ">=1.1.42+1802ada577",
     "fabric-lifecycle-events-v1": ">=2.2.23+1802ada577",
     "fabric-rendering-v1": ">=3.0.9+1802ada577",
     "fabric-resource-loader-v0": ">=0.11.12+fb82e9d777",

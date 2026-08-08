@@ -9,7 +9,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import com.go4no.ryoblocks.client.NijikaVillagerRenderer;
 import com.go4no.ryoblocks.client.PaSanEndermanRenderer;
 import com.go4no.ryoblocks.client.KitaLavaVisualProof;
+import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.entity.EntityType;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.util.Identifier;
 
 public final class RyoBlocksClient implements ClientModInitializer {
@@ -25,6 +28,7 @@ public final class RyoBlocksClient implements ClientModInitializer {
         EntityRendererRegistry.register(EntityType.VILLAGER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.WANDERING_TRADER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.ENDERMAN, PaSanEndermanRenderer::new);
+        BlockRenderLayerMap.INSTANCE.putFluids(RenderLayer.getTranslucent(), Fluids.LAVA, Fluids.FLOWING_LAVA);
         if (Boolean.getBoolean("ryoBlocks.visualProof")) {
             ClientTickEvents.END_CLIENT_TICK.register(new KitaLavaVisualProof());
         }

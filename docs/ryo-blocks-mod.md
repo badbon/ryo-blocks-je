@@ -41,9 +41,9 @@ python tools/validate_bocchi_wolf_assets.py --minecraft-jar "$env:APPDATA\.minec
 
 ## Kita Lava
 
-Lava and flowing lava retain Minecraft's native animated fluid behavior: lighting, damage, flow, collision, particles, and sounds. Their two native atlas sprites carry otherwise-unused alpha markers so the terrain shaders can identify lava without hardcoding unstable atlas coordinates. On those marked pixels, the Ryo overlay is skipped and the accepted transparent Kita portrait from `source/kita-lava-cutout.png` is composited at 80% strength over the moving lava, leaving 20% of the native animated lava visible. The portrait remains sharp because it is sampled from one high-resolution texture rather than baked into Minecraft's 16x16 lava frames.
+Lava and flowing lava retain Minecraft's native animated fluid behavior: lighting, damage, flow, collision, particles, sounds, and `level` / `falling` block-state properties. Kita is now baked directly into Minecraft's normal `lava_still.png` and `lava_flow.png` animation frames as a 28% lava-tinted imprint, with vanilla dimensions, animation metadata, and alpha preserved. The client registers vanilla lava on Fabric's translucent fluid render layer, and that terrain shader deliberately leaves fluid and glass-like terrain on Minecraft's normal sample/fog path instead of applying the shared Ryo block tint over it.
 
-`source/kita-lava.png` is the exact user-supplied frame. `source/kita-lava-chroma.png` is the accepted background-replacement output and `source/kita-lava-cutout.png` is its locally background-removed derivative. The packaged portrait must remain byte-identical to that accepted cutout.
+`source/kita-lava.png` is the exact user-supplied frame. `source/kita-lava-chroma.png` is the accepted background-replacement output and `source/kita-lava-cutout.png` is its locally background-removed derivative. Regenerate the baked lava sprites through `tools/generate_ryo_textures.py`; do not hand-paint the packaged lava PNGs.
 
 ## Ryo Edition Title
 
@@ -74,7 +74,7 @@ python tools/generate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\v
 python tools/validate_ryo_textures.py --minecraft-jar "$env:APPDATA\.minecraft\versions\1.20.1\1.20.1.jar"
 ```
 
-Validation rejects block texture overrides other than the two byte-checked Kita lava markers, model redirects, missing item/HUD assets, altered item silhouettes, missing core shader overrides, or missing shared Ryo/Kita terrain textures.
+Validation rejects block texture overrides other than the two baked Kita lava sprites, model redirects, missing item/HUD assets, altered item silhouettes, missing core shader overrides, removed shader sampler cleanup regressions, or missing shared Ryo terrain textures.
 
 ## Low-Memory Block Tint
 

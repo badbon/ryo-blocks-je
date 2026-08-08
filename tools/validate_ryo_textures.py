@@ -12,12 +12,13 @@ from generate_ryo_textures import (
     HUD_TEXTURES,
     ITEM_PREFIX,
     ITEM_TEMPLATE_TEXTURES,
-    KITA_LAVA_RESOURCE,
     KITA_LAVA_TEXTURES,
     SHIELD_TEXTURES,
     is_high_risk_item_texture,
+    kita_lava_texture,
     ryo_overlay_texture,
     shader_overlay_source,
+    trim_export_border,
     vanilla_item_texture_names,
 )
 
@@ -67,10 +68,19 @@ def main() -> None:
         expected_block_files = set(KITA_LAVA_TEXTURES)
         if generated_block_files != expected_block_files:
             failures.append(
-                "block texture overrides must contain only Kita's marked lava sprites: "
+                "block texture overrides must contain only Kita's baked lava sprites: "
                 f"expected={sorted(expected_block_files)} actual={sorted(generated_block_files)}"
             )
-        for relative, marker_alpha in KITA_LAVA_TEXTURES.items():
+        if not args.kita_lava_source.exists():
+            failures.append(f"missing Kita lava source: {args.kita_lava_source}")
+            kita_lava_portrait = None
+        else:
+            kita_lava_portrait = trim_export_border(Image.open(args.kita_lava_source).convert("RGBA"))
+            alpha_bbox = kita_lava_portrait.getchannel("A").getbbox()
+            if alpha_bbox is not None:
+                kita_lava_portrait = kita_lava_portrait.crop(alpha_bbox)
+
+        for relative in sorted(KITA_LAVA_TEXTURES):
             name = f"{BLOCK_PREFIX}{relative}"
             generated_path = generated_root / relative
             if not generated_path.exists():
@@ -82,10 +92,14 @@ def main() -> None:
             generated.load()
             if generated.size != vanilla.size:
                 failures.append(f"Kita lava dimensions changed: {relative}")
-            if ImageChops.difference(generated.convert("RGB"), vanilla.convert("RGB")).getbbox():
-                failures.append(f"Kita lava changed vanilla animation colors: {relative}")
-            if generated.getchannel("A").getextrema() != (marker_alpha, marker_alpha):
-                failures.append(f"Kita lava marker alpha is wrong: {relative}")
+            if ImageChops.difference(vanilla.getchannel("A"), generated.getchannel("A")).getbbox():
+                failures.append(f"Kita lava alpha/properties changed: {relative}")
+            if ImageChops.difference(generated.convert("RGB"), vanilla.convert("RGB")).getbbox() is None:
+                failures.append(f"Kita lava has no visible Kita art: {relative}")
+            if kita_lava_portrait is not None:
+                expected = kita_lava_texture(vanilla, kita_lava_portrait)
+                if ImageChops.difference(expected, generated).getbbox():
+                    failures.append(f"Kita lava composition mismatch: {relative}")
             metadata_name = f"{name}.mcmeta"
             metadata_path = generated_root / f"{relative}.mcmeta"
             if not metadata_path.exists() or metadata_path.read_bytes() != jar.read(metadata_name):
@@ -105,34 +119,38 @@ def main() -> None:
                     continue
                 text = shader_path.read_text(encoding="utf-8")
                 if suffix == ".json":
-                    for sampler in ("RyoSampler", "KitaSampler"):
-                        if sampler not in text:
-                            failures.append(f"core shader JSON does not declare {sampler}: {stem}{suffix}")
+                    if stem == "rendertype_translucent" and "RyoSampler" in text:
+                        failures.append(f"translucent shader JSON still declares RyoSampler: {stem}{suffix}")
+                    if stem != "rendertype_translucent" and "RyoSampler" not in text:
+                        failures.append(f"core shader JSON does not declare RyoSampler: {stem}{suffix}")
+                    if "KitaSampler" in text:
+                        failures.append(f"core shader JSON still declares removed KitaSampler: {stem}{suffix}")
                 if suffix == ".fsh":
-                    for required in (
-                        "RyoSampler",
+                    if stem == "rendertype_translucent":
+                        for removed in ("RyoSampler", "RYO_OVERLAY_STRENGTH", "VANILLA_SPRITE_SIZE"):
+                            if removed in text:
+                                failures.append(f"translucent shader still tints fluids with {removed}: {stem}{suffix}")
+                    else:
+                        for required in (
+                            "RyoSampler",
+                            "RYO_OVERLAY_STRENGTH = 0.50",
+                            "VANILLA_SPRITE_SIZE = 16.0",
+                        ):
+                            if required not in text:
+                                failures.append(f"core shader fragment is missing {required}: {stem}{suffix}")
+                    for removed in (
                         "KitaSampler",
-                        "RYO_OVERLAY_STRENGTH = 0.50",
-                        "VANILLA_SPRITE_SIZE = 16.0",
-                        "KITA_LAVA_OVERLAY_STRENGTH = 0.80",
-                        "KITA_STILL_MARKER_ALPHA = 254.0 / 255.0",
-                        "KITA_FLOW_MARKER_ALPHA = 253.0 / 255.0",
-                        "KITA_FACE_WORLD_SCALE = 1.0",
+                        "KITA_LAVA_OVERLAY_STRENGTH",
+                        "KITA_STILL_MARKER_ALPHA",
+                        "KITA_FLOW_MARKER_ALPHA",
+                        "kitaFaceUv",
                     ):
-                        if required not in text:
-                            failures.append(f"core shader fragment is missing {required}: {stem}{suffix}")
+                        if removed in text:
+                            failures.append(f"core shader fragment still has removed Kita path {removed}: {stem}{suffix}")
 
         overlay_path = args.resources_dir / "assets" / "ryo-blocks" / "textures" / "terrain" / "ryo_overlay.png"
         if not overlay_path.exists():
             failures.append("missing shared terrain overlay texture")
-
-        kita_path = args.resources_dir / KITA_LAVA_RESOURCE
-        if not args.kita_lava_source.exists():
-            failures.append(f"missing Kita lava source: {args.kita_lava_source}")
-        elif not kita_path.exists():
-            failures.append("missing packaged Kita lava portrait")
-        elif kita_path.read_bytes() != args.kita_lava_source.read_bytes():
-            failures.append("packaged Kita lava portrait differs from its accepted source")
 
         item_root = args.resources_dir / "assets" / "minecraft" / "textures" / "item"
         item_hashes: set[bytes] = set()
