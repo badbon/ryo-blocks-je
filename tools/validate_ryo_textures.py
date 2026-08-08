@@ -12,6 +12,7 @@ from generate_ryo_textures import (
     HUD_TEXTURES,
     ITEM_PREFIX,
     ITEM_TEMPLATE_TEXTURES,
+    KITA_LAVA_FRAME_SIZE,
     KITA_LAVA_TEXTURES,
     SHIELD_TEXTURES,
     is_high_risk_item_texture,
@@ -90,9 +91,16 @@ def main() -> None:
                 vanilla.load()
             generated = Image.open(generated_path).convert("RGBA")
             generated.load()
-            if generated.size != vanilla.size:
-                failures.append(f"Kita lava dimensions changed: {relative}")
-            if ImageChops.difference(vanilla.getchannel("A"), generated.getchannel("A")).getbbox():
+            vanilla_frame_size = vanilla.width
+            vanilla_frame_count = vanilla.height // vanilla_frame_size
+            expected_size = (KITA_LAVA_FRAME_SIZE, KITA_LAVA_FRAME_SIZE * vanilla_frame_count)
+            if generated.size != expected_size:
+                failures.append(f"Kita lava dimensions are wrong: {relative} {generated.size} expected {expected_size}")
+            expected_alpha = vanilla.getchannel("A").resize(
+                expected_size,
+                Image.Resampling.NEAREST,
+            )
+            if ImageChops.difference(expected_alpha, generated.getchannel("A")).getbbox():
                 failures.append(f"Kita lava alpha/properties changed: {relative}")
             if ImageChops.difference(generated.convert("RGB"), vanilla.convert("RGB")).getbbox() is None:
                 failures.append(f"Kita lava has no visible Kita art: {relative}")

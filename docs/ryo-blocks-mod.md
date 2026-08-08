@@ -1,6 +1,6 @@
 # Ryo Blocks Mod
 
-Private Fabric mod that force-enables a bundled resource pack tinting vanilla Minecraft 1.20.1 blocks with the supplied Ryo image. The product jar bundles its four required Fabric API modules; install Fabric Loader, then the one Ryo Blocks jar.
+Private Fabric mod that force-enables a bundled resource pack tinting vanilla Minecraft 1.20.1 blocks with the supplied Ryo image. The product jar bundles its required Fabric API modules; install Fabric Loader, then the one Ryo Blocks jar.
 
 All vanilla item textures are Ryo-themed while keeping their native dimensions, alpha silhouettes, animation metadata, and light/dark edge structure. The transparent Ryo character cutout blends over ordinary items at 50%; stateful, colour-coded, ambiguous-food, mining-resource, ore-drop, and template/pattern items use 20% coverage where appropriate. Dynamic UI layers such as empty slots, potion liquid overlays, spawn-egg overlays, leather colour overlays, and firework-star overlays remain vanilla so their gameplay cues stay readable. This adds no custom items, names, recipes, menus, commands, or world data. HUD icons preserve their vanilla state silhouettes and dimensions; only the hotbar regions of `widgets.png` are changed, so menu buttons and container screens remain vanilla.
 
@@ -41,7 +41,7 @@ python tools/validate_bocchi_wolf_assets.py --minecraft-jar "$env:APPDATA\.minec
 
 ## Kita Lava
 
-Lava and flowing lava retain Minecraft's native animated fluid behavior: lighting, damage, flow, collision, particles, sounds, and `level` / `falling` block-state properties. Kita is now baked directly into Minecraft's normal `lava_still.png` and `lava_flow.png` animation frames as a 28% lava-tinted imprint, with vanilla dimensions, animation metadata, and alpha preserved. The client registers vanilla lava on Fabric's translucent fluid render layer, and that terrain shader deliberately leaves fluid and glass-like terrain on Minecraft's normal sample/fog path instead of applying the shared Ryo block tint over it.
+Lava and flowing lava retain Minecraft's native animated fluid behavior: lighting, damage, flow, collision, particles, sounds, and `level` / `falling` block-state properties. Kita is now baked directly into Minecraft's normal `lava_still.png` and `lava_flow.png` animation frames as 64px animated fluid sprites with a visible 68% Kita overlay, while preserving the vanilla frame count, animation metadata, and alpha semantics. The client registers vanilla lava on Fabric's translucent fluid render layer, and that terrain shader deliberately leaves fluid and glass-like terrain on Minecraft's normal sample/fog path instead of applying the shared Ryo block tint over it.
 
 `source/kita-lava.png` is the exact user-supplied frame. `source/kita-lava-chroma.png` is the accepted background-replacement output and `source/kita-lava-cutout.png` is its locally background-removed derivative. Regenerate the baked lava sprites through `tools/generate_ryo_textures.py`; do not hand-paint the packaged lava PNGs.
 
@@ -78,7 +78,7 @@ Validation rejects block texture overrides other than the two baked Kita lava sp
 
 ## Low-Memory Block Tint
 
-The built-in resource pack overrides Minecraft 1.20.1's terrain core shaders for solid, cutout, cutout-mipped, and translucent block render types. Each pass samples `Sampler0` (Minecraft's native block atlas) and `RyoSampler` (one bundled Ryo overlay texture) on the GPU. No Iris shaderpack, Sodium, OptiFine, or high-resolution per-block asset is required.
+The built-in resource pack overrides Minecraft 1.20.1's terrain core shaders for solid, cutout, cutout-mipped, and translucent block render types. Solid, cutout, and cutout-mipped terrain sample `Sampler0` (Minecraft's native block atlas) and `RyoSampler` (one bundled Ryo overlay texture) on the GPU. The translucent pass stays on Minecraft's normal sample/fog path so lava, water, glass-like terrain, and translucent sorting are not double-tinted. No Iris shaderpack, Sodium, Indium, OptiFine, or shaderpack is required.
 
 ## Shared Terrain Submission
 

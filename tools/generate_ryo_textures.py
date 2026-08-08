@@ -85,9 +85,8 @@ KITA_LAVA_TEXTURES = {
     "lava_still.png",
     "lava_flow.png",
 }
-KITA_LAVA_OVERLAY_STRENGTH = 0.28
-KITA_LAVA_DARK = (110, 20, 4)
-KITA_LAVA_LIGHT = (255, 196, 38)
+KITA_LAVA_FRAME_SIZE = 64
+KITA_LAVA_OVERLAY_STRENGTH = 0.68
 
 
 def reset_directory(path: Path) -> None:
@@ -310,35 +309,38 @@ def generate_kita_lava_assets(
 
 
 def kita_lava_texture(vanilla: Image.Image, portrait: Image.Image) -> Image.Image:
-    frame_size = vanilla.width
-    if frame_size <= 0 or vanilla.height % frame_size != 0:
+    vanilla_frame_size = vanilla.width
+    if vanilla_frame_size <= 0 or vanilla.height % vanilla_frame_size != 0:
         raise ValueError(f"Unexpected vanilla lava animation dimensions: {vanilla.size}")
-    themed = Image.new("RGBA", vanilla.size)
-    for top in range(0, vanilla.height, frame_size):
-        frame = vanilla.crop((0, top, frame_size, top + frame_size))
+    frame_count = vanilla.height // vanilla_frame_size
+    themed = Image.new("RGBA", (KITA_LAVA_FRAME_SIZE, KITA_LAVA_FRAME_SIZE * frame_count))
+    for frame_index in range(frame_count):
+        top = frame_index * vanilla_frame_size
+        frame = vanilla.crop((0, top, vanilla_frame_size, top + vanilla_frame_size)).resize(
+            (KITA_LAVA_FRAME_SIZE, KITA_LAVA_FRAME_SIZE),
+            Image.Resampling.NEAREST,
+        )
         sprite_portrait = ImageOps.contain(
             portrait,
-            (frame_size, frame_size),
+            (KITA_LAVA_FRAME_SIZE, KITA_LAVA_FRAME_SIZE),
             method=Image.Resampling.LANCZOS,
         )
-        sprite = Image.new("RGBA", (frame_size, frame_size), (0, 0, 0, 0))
+        sprite = Image.new("RGBA", (KITA_LAVA_FRAME_SIZE, KITA_LAVA_FRAME_SIZE), (0, 0, 0, 0))
         sprite.alpha_composite(
             sprite_portrait,
             (
-                (frame_size - sprite_portrait.width) // 2,
-                frame_size - sprite_portrait.height,
+                (KITA_LAVA_FRAME_SIZE - sprite_portrait.width) // 2,
+                KITA_LAVA_FRAME_SIZE - sprite_portrait.height,
             ),
         )
         overlay_alpha = sprite.getchannel("A").point(
             lambda value: round(value * KITA_LAVA_OVERLAY_STRENGTH)
         )
-        molten_sprite = ImageOps.colorize(
-            sprite.convert("L"),
-            black=KITA_LAVA_DARK,
-            white=KITA_LAVA_LIGHT,
+        blended_rgb = Image.composite(sprite.convert("RGB"), frame.convert("RGB"), overlay_alpha)
+        themed.paste(
+            Image.merge("RGBA", (*blended_rgb.split(), frame.getchannel("A"))),
+            (0, frame_index * KITA_LAVA_FRAME_SIZE),
         )
-        blended_rgb = Image.composite(molten_sprite, frame.convert("RGB"), overlay_alpha)
-        themed.paste(Image.merge("RGBA", (*blended_rgb.split(), frame.getchannel("A"))), (0, top))
     return themed
 
 
@@ -383,6 +385,7 @@ def generate_textures(
         "model_texture_redirects": 0,
         "block_tint_renderer": "minecraft_core_shader",
         "kita_lava_renderer": "baked_vanilla_lava_animation",
+        "kita_lava_frame_size": KITA_LAVA_FRAME_SIZE,
         "kita_lava_overlay_strength": KITA_LAVA_OVERLAY_STRENGTH,
         "generated_item_textures": generated_items,
         "high_risk_item_textures": high_risk_items,
