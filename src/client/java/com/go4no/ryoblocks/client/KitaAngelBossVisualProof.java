@@ -84,7 +84,6 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
                 commands.executeWithPrefix(source, "fill -10 179 -6 10 179 10 minecraft:smooth_quartz");
                 commands.executeWithPrefix(source, "give " + playerName + " ryo-blocks:kita_angel_boss_spawn_egg");
                 commands.executeWithPrefix(source, "summon ryo-blocks:kita_angel_boss 0 182 4 {NoAI:1b,Silent:1b,Invulnerable:1b,Invul:0,Rotation:[180.0f,0.0f],CustomName:'{\"text\":\"Kita \\\\\"Aura\\\\\" Ikuyo\",\"color\":\"light_purple\"}'}");
-                commands.executeWithPrefix(source, "summon minecraft:wither 5 182 5 {NoAI:1b,Silent:1b,Invulnerable:1b,Invul:0,Rotation:[180.0f,0.0f],CustomName:'{\"text\":\"Vanilla Wither\",\"color\":\"gray\"}'}");
                 commands.executeWithPrefix(source, "tp " + playerName + " 0 182 -9 0 10");
             });
             client.getWindow().setWindowedSize(1280, 720);
@@ -114,12 +113,6 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
         }
 
         if (screenshotSaved && ++savedTicks >= CAPTURE_SETTLE_TICKS) {
-            if (captureIndex == 0) {
-                server.execute(() -> server.getCommandManager().executeWithPrefix(
-                    server.getCommandSource(),
-                    "kill @e[type=minecraft:wither]"
-                ));
-            }
             captureIndex++;
             if (captureIndex < 3) {
                 screenshotRequested = false;
@@ -134,7 +127,7 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
 
     private static String captureName(int index) {
         return switch (index) {
-            case 0 -> "front-entity-separation";
+            case 0 -> "front-clean-face";
             case 1 -> "side-wing-attachment";
             case 2 -> "back-wing-attachment";
             default -> "unknown";
