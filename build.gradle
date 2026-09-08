@@ -22,6 +22,14 @@ loom {
                 property "ryoBlocks.visualProof", "true"
                 property "ryoBlocks.bossVisualProof", "true"
             }
+            if (project.hasProperty("bossAbilityProof")) {
+                property "ryoBlocks.visualProof", "true"
+                property "ryoBlocks.bossVisualProof", "true"
+                property "ryoBlocks.bossAbilityProof", "true"
+                if (project.hasProperty("bossAbilityScene")) {
+                    property "ryoBlocks.bossAbilityScene", project.property("bossAbilityScene").toString()
+                }
+            }
         }
     }
 

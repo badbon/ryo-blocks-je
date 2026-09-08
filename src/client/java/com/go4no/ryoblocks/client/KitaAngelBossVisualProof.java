@@ -37,6 +37,8 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
     private int captureIndex;
     private int readyTicks;
     private int savedTicks;
+    private final KitaAngelBossAbilityProof abilityProof = Boolean.getBoolean("ryoBlocks.bossAbilityProof")
+        ? new KitaAngelBossAbilityProof() : null;
 
     @Override
     public void onEndTick(MinecraftClient client) {
@@ -100,6 +102,10 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
             return;
         }
 
+        if (abilityProof != null) {
+            abilityProof.tick(client);
+            return;
+        }
         placeCamera(client);
         client.setCameraEntity(client.player);
         client.inGameHud.getChatHud().clear(false);

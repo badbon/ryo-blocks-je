@@ -1,0 +1,17 @@
+[23:23:38] [Render thread/INFO] (KitaAbilityProof) CAPTURE 01-egg-spawn: health=300.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:23:40] [Render thread/INFO] (KitaAbilityProof) CAPTURE 02-live-skulls: health=300.0, invul=0, skull=true, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:23:40] [Render thread/INFO] (KitaAbilityProof) CAPTURE 03-wither-impact: health=300.0, invul=0, skull=true, charged=false, netherStars=0, targetWither=true, fireImmune=false
+[23:23:42] [Render thread/INFO] (KitaAbilityProof) CAPTURE 04-half-health: health=122.0, invul=0, skull=true, charged=false, netherStars=0, targetWither=true, fireImmune=false
+[23:23:43] [Render thread/INFO] (KitaAbilityProof) CAPTURE 05-healing-before: health=210.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:23:48] [Render thread/INFO] (KitaAbilityProof) CAPTURE 06-healing-after: health=215.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:23:48] [Render thread/INFO] (KitaAbilityProof) CAPTURE 07-blocks-before: health=300.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:23:50] [Render thread/INFO] (KitaAbilityProof) CAPTURE 08-blocks-after: health=300.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:23:51] [Render thread/INFO] (KitaAbilityProof) CAPTURE 09-death-drops: health=0.0, invul=0, skull=false, charged=false, netherStars=1, targetWither=false, fireImmune=false
+[23:23:56] [Render thread/INFO] (KitaAbilityProof) CAPTURE 10-forced-charge: health=180.0, invul=131, skull=false, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:24:03] [Render thread/INFO] (KitaAbilityProof) CAPTURE 11-forced-explosion: health=300.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:24:15] [Render thread/INFO] (KitaAbilityProof) CAPTURE 12-idle-blue-skull: health=300.0, invul=0, skull=true, charged=true, netherStars=0, targetWither=false, fireImmune=false
+[23:24:17] [Render thread/INFO] (KitaAbilityProof) CAPTURE 13-fire-vulnerability: health=299.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=false, fireImmune=false
+[23:24:20] [Render thread/INFO] (KitaAbilityProof) CAPTURE 14-wither-rose: health=300.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=true, fireImmune=false
+
+Focused rose capture supersedes scene 14 above:
+[23:29:31] [Render thread/INFO] (KitaAbilityProof) CAPTURE 14-wither-rose: health=300.0, invul=0, skull=false, charged=false, netherStars=0, targetWither=true, fireImmune=false, roseItems=1
