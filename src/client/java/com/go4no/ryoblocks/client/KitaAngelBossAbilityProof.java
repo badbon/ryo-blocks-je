@@ -28,7 +28,8 @@ final class KitaAngelBossAbilityProof {
         "01-egg-spawn", "02-live-skulls", "03-wither-impact", "04-half-health",
         "05-healing-before", "06-healing-after", "07-blocks-before", "08-blocks-after",
         "09-death-drops", "10-forced-charge", "11-forced-explosion", "12-idle-blue-skull",
-        "13-fire-vulnerability", "14-wither-rose"
+        "13-fire-vulnerability", "14-wither-rose", "15-feather-normal", "16-feather-charged",
+        "17-feather-impact", "18-vanilla-skull"
     };
     private int stage = Integer.getInteger("ryoBlocks.bossAbilityScene", 0);
     private int ticks;
@@ -42,6 +43,8 @@ final class KitaAngelBossAbilityProof {
     private int explosionFrames;
     private int victimDeathTicks;
     private boolean victimWeakened;
+    private WitherSkullEntity showcaseProjectile;
+    private int impactTicks;
 
     void tick(MinecraftClient client) {
         if (stage >= NAMES.length) {
@@ -53,9 +56,9 @@ final class KitaAngelBossAbilityProof {
         client.getToastManager().clear();
         client.inGameHud.getChatHud().clear(false);
         Vec3d at = focus;
-        double distance = stage == 8 || stage == 13 ? 0.4 : 1;
+        double distance = stage >= 14 ? 0.25 : stage == 8 || stage == 13 ? 0.4 : 1;
         client.player.updatePositionAndAngles(at.x - 10 * distance, at.y + 4 * distance,
-            at.z - 13 * distance, -37.57F, stage == 8 || stage == 13 ? 27 : 15);
+            at.z - 13 * distance, -37.57F, stage >= 14 ? 30 : stage == 8 || stage == 13 ? 27 : 15);
         client.setCameraEntity(client.player);
         if (saved) {
             stage++;
@@ -89,7 +92,7 @@ final class KitaAngelBossAbilityProof {
         java.util.List<Entity> previous = new java.util.ArrayList<>();
         for (Entity entity : server.getOverworld().iterateEntities()) {
             if (entity instanceof KitaAngelBossEntity || entity instanceof WitherSkullEntity
-                || entity.getType() == EntityType.IRON_GOLEM || entity.getType() == EntityType.SHEEP
+                || entity.getType() == EntityType.WITHER || entity.getType() == EntityType.IRON_GOLEM || entity.getType() == EntityType.SHEEP
                 || entity.getType() == EntityType.ITEM || entity.getType() == EntityType.EXPERIENCE_ORB) {
                 previous.add(entity);
             }
@@ -112,6 +115,7 @@ final class KitaAngelBossAbilityProof {
             }
         }
         target = null;
+        showcaseProjectile = null;
         focus = boss.getPos().add(0, 1.5, 0);
     }
 
@@ -119,9 +123,29 @@ final class KitaAngelBossAbilityProof {
         ServerWorld world = server.getOverworld();
         if (tick == 1) {
             switch (scene) {
-                case 0, 4, 6, 9, 11, 12, 13 -> reset(server);
+                case 0, 4, 6, 9, 11, 12, 13, 14, 15, 16, 17 -> reset(server);
                 default -> { }
             }
+        }
+        if (scene >= 14 && tick == 40) {
+            boss.setAiDisabled(true);
+            LivingEntity owner = boss;
+            if (scene == 17) {
+                var vanilla = EntityType.WITHER.create(world);
+                vanilla.refreshPositionAndAngles(-5, 180, 4, 0, 0);
+                vanilla.setAiDisabled(true);
+                world.spawnEntity(vanilla);
+                owner = vanilla;
+            }
+            showcaseProjectile = new WitherSkullEntity(world, owner, 0, 0, 1);
+            showcaseProjectile.setPosition(3, 183, 4);
+            showcaseProjectile.setCharged(scene == 15);
+            world.spawnEntity(showcaseProjectile);
+            if (scene == 16) {
+                command(server, "fill 1 180 10 5 185 10 stone");
+            }
+        }
+        if (tick == 1) {
             switch (scene) {
                 case 1 -> {
                     target = EntityType.IRON_GOLEM.create(world);
@@ -159,7 +183,10 @@ final class KitaAngelBossAbilityProof {
                 default -> { }
             }
         }
-        if (scene == 13 && target != null) {
+        if (scene >= 14) {
+            focus = scene == 16 ? new Vec3d(3, 183, 10)
+                : showcaseProjectile == null ? new Vec3d(3, 183, 4) : showcaseProjectile.getPos();
+        } else if (scene == 13 && target != null) {
             focus = target.getPos();
         } else if (scene != 8 && boss.isAlive()) {
             focus = target != null && target.isAlive()
@@ -208,6 +235,8 @@ final class KitaAngelBossAbilityProof {
             case 11 -> blue;
             case 12 -> tick >= 30;
             case 13 -> target != null && !target.isAlive() && ++victimDeathTicks >= 65;
+            case 14, 15, 17 -> tick >= 56;
+            case 16 -> tick >= 40 && showcaseProjectile.isRemoved() && ++impactTicks >= 4;
             default -> false;
         };
     }

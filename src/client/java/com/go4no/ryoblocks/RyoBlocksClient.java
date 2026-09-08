@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import com.go4no.ryoblocks.client.KitaAngelBossRenderer;
 import com.go4no.ryoblocks.client.KitaAngelBossVisualProof;
+import com.go4no.ryoblocks.client.KitaFeatherProjectileRenderer;
 import com.go4no.ryoblocks.client.NijikaVillagerRenderer;
 import com.go4no.ryoblocks.client.PaSanEndermanRenderer;
 import com.go4no.ryoblocks.client.KitaLavaVisualProof;
@@ -42,6 +43,7 @@ public final class RyoBlocksClient implements ClientModInitializer {
         EntityRendererRegistry.register(EntityType.WANDERING_TRADER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.ENDERMAN, PaSanEndermanRenderer::new);
         EntityRendererRegistry.register(RyoBlocks.KITA_ANGEL_BOSS, KitaAngelBossRenderer::new);
+        EntityRendererRegistry.register(EntityType.WITHER_SKULL, KitaFeatherProjectileRenderer::new);
         BlockRenderLayerMap.INSTANCE.putFluids(RenderLayer.getTranslucent(), Fluids.LAVA, Fluids.FLOWING_LAVA);
         boolean bossVisualProof = Boolean.getBoolean("ryoBlocks.bossVisualProof");
         if (Boolean.getBoolean("ryoBlocks.visualProof") && !bossVisualProof) {

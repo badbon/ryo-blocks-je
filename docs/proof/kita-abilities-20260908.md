@@ -1,5 +1,10 @@
 # Kita "Aura" Ikuyo: current abilities and effects
 
+Subsequent visual update: Kita's black/blue skull appearances have been replaced
+with ivory-and-gold feather bolts. The attack mechanics described below remain
+unchanged. See [feather projectile proof](kita-feather-projectiles-20260908.md).
+The skull screenshots in this report preserve the pre-change audit.
+
 Audited against the current source on 2026-09-08, based on gameplay commit
 8b1bf23. The audit adds only opt-in proof tooling and documentation.
 KitaAngelBossEntity extends WitherEntity without overriding any gameplay.

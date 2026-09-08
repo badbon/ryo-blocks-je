@@ -13,6 +13,8 @@
     "terrain.WorldRendererChunkInfoMixin",
     "terrain.WorldRendererTerrainBatchMixin",
     "WitherEntityMixin",
+    "KitaFeatherTrailMixin",
+    "KitaFeatherImpactMixin",
     "WolfCollarFeatureRendererMixin",
     "WindowMixin"
   ],
