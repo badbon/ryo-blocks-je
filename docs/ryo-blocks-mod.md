@@ -26,11 +26,11 @@ Every Enderman is rendered client-side as the supplied Pa-san slim-player model.
 
 No custom entity or server behavior is registered. Vanilla and unmodded Fabric servers remain compatible, and dedicated servers do not need the mod.
 
-## Bocchi Wither Boss
+## Kita Angel Wither Boss
 
-Every Wither is rendered client-side as a scaled Bocchi slim-player boss. Its spawning ritual, AI, boss bar, skull attacks, flight, explosion, hitbox, sounds, drops, networking, saved data, and server authority remain Minecraft's native Wither behavior. This is only a renderer swap for the vanilla `minecraft:wither` entity, so vanilla and unmodded Fabric servers remain compatible.
+Every Wither is rendered client-side as a scaled Kita slim-player angel boss with separate transparent wing geometry behind the shoulders. Its spawning ritual, AI, boss bar, skull attacks, flight, explosion, hitbox, sounds, drops, networking, saved data, and server authority remain Minecraft's native Wither behavior. This is only a renderer swap for the vanilla `minecraft:wither` entity, so vanilla and unmodded Fabric servers remain compatible.
 
-The source skin is `source/bocchi-boss-player-skin.png`; its packaged copy is `assets/ryo-blocks/textures/entity/player/bocchi_boss.png`.
+The source skin is `source/kita-angel-player-skin.png`; its packaged copy is `assets/ryo-blocks/textures/entity/player/kita_angel.png`. The source wings are `source/kita-angel-wings.png`; their packaged copy is `assets/ryo-blocks/textures/entity/boss/kita_angel_wings.png`.
 
 ## Bocchi Wolves
 

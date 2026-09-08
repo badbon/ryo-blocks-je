@@ -1,6 +1,6 @@
 package com.go4no.ryoblocks.client;
 
-import com.go4no.ryoblocks.BocchiBossAssets;
+import com.go4no.ryoblocks.KitaAngelBossAssets;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
@@ -10,15 +10,16 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.util.Identifier;
 
-public final class BocchiBossRenderer<T extends WitherEntity> extends MobEntityRenderer<T, PlayerEntityModel<T>> {
-    private static final float BOSS_SCALE = 2.4F;
+public final class KitaAngelBossRenderer<T extends WitherEntity> extends MobEntityRenderer<T, PlayerEntityModel<T>> {
+    private static final float BOSS_SCALE = 2.45F;
 
-    public BocchiBossRenderer(EntityRendererFactory.Context context) {
+    public KitaAngelBossRenderer(EntityRendererFactory.Context context) {
         super(
             context,
-            new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER_SLIM), BocchiBossAssets.SLIM_ARMS),
+            new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER_SLIM), KitaAngelBossAssets.SLIM_ARMS),
             1.0F
         );
+        this.addFeature(new KitaAngelWingsFeatureRenderer<>(this));
     }
 
     @Override
@@ -38,6 +39,6 @@ public final class BocchiBossRenderer<T extends WitherEntity> extends MobEntityR
 
     @Override
     public Identifier getTexture(T wither) {
-        return BocchiBossAssets.PLAYER_TEXTURE;
+        return KitaAngelBossAssets.PLAYER_TEXTURE;
     }
 }

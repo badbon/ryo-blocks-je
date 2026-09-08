@@ -8,7 +8,7 @@
 - Ryo player skin (forced)
 - Nijika villagers and chests
 - Pa-san Enderman with vanilla behavior
-- Bocchi Wither boss with vanilla boss behavior
+- Kita Angel Wither boss with vanilla boss behavior
 - Bocchi pink wolves and collar
 - Kita appears directly on animated lava and lavafalls
 - RyoCraft Minecraft Ryo Edition main menu (subtle main menu title change :D)

@@ -18,6 +18,10 @@ loom {
             if (project.hasProperty("visualProof")) {
                 property "ryoBlocks.visualProof", "true"
             }
+            if (project.hasProperty("bossVisualProof")) {
+                property "ryoBlocks.visualProof", "true"
+                property "ryoBlocks.bossVisualProof", "true"
+            }
         }
     }
 
@@ -135,6 +139,9 @@ tasks.register("verifyStandaloneFabricModules") {
         ] as Set
         def requiredProductEntries = [
             "com/go4no/ryoblocks/RyoBlocksClient.class",
+            "com/go4no/ryoblocks/client/KitaAngelBossRenderer.class",
+            "assets/ryo-blocks/textures/entity/player/kita_angel.png",
+            "assets/ryo-blocks/textures/entity/boss/kita_angel_wings.png",
             "com/go4no/ryoblocks/client/RyoTerrainShaders.class",
             "com/go4no/ryoblocks/mixin/client/GameRendererMixin.class",
             "resourcepacks/ryo_blocks/pack.mcmeta",
