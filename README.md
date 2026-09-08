@@ -7,13 +7,13 @@
 - Ryo-tinted blocks, items and survival HUD
 - Ryo player skin (forced)
 - Nijika villagers and chests
-- Pa-san Enderman with vanilla behavior
-- Kita Angel Wither boss with vanilla boss behavior
+- Pa-san Enderman with vanilla Enderman behavior
+- Kita Angel boss as its own spawn-egg-only Wither-behavior boss
 - Bocchi pink wolves and collar
 - Kita appears directly on animated lava and lavafalls
 - RyoCraft Minecraft Ryo Edition main menu (subtle main menu title change :D)
 
-Client-side Fabric mod for Minecraft 1.20.1. Works on vanilla servers. Requires Fabric.
+Fabric mod for Minecraft 1.20.1. Requires Fabric on both client and server when using the custom Kita Angel boss.
 
 ## Installation
 Place .jar from Releases section of this GitHub repo in your fabric profile /mods/ folder.

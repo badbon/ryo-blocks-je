@@ -4,20 +4,18 @@ import com.go4no.ryoblocks.KitaAngelBossAssets;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
-import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.util.Identifier;
 
-public final class KitaAngelBossRenderer<T extends WitherEntity> extends MobEntityRenderer<T, PlayerEntityModel<T>> {
-    private static final float BOSS_SCALE = 2.45F;
+public final class KitaAngelBossRenderer<T extends WitherEntity> extends MobEntityRenderer<T, KitaAngelBossModel<T>> {
+    private static final float BOSS_SCALE = 1.85F;
 
     public KitaAngelBossRenderer(EntityRendererFactory.Context context) {
         super(
             context,
-            new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER_SLIM), KitaAngelBossAssets.SLIM_ARMS),
-            1.0F
+            new KitaAngelBossModel<>(context.getPart(KitaAngelBossModelLayers.KITA_ANGEL_BOSS)),
+            1.15F
         );
         this.addFeature(new KitaAngelWingsFeatureRenderer<>(this));
     }

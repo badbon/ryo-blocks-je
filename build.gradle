@@ -39,7 +39,10 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation include(fabricApi.module("fabric-api-base", project.fabric_api_version))
     modImplementation include(fabricApi.module("fabric-blockrenderlayer-v1", project.fabric_api_version))
+    modImplementation include(fabricApi.module("fabric-item-group-api-v1", project.fabric_api_version))
     modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", project.fabric_api_version))
+    modImplementation include(fabricApi.module("fabric-object-builder-api-v1", project.fabric_api_version))
+    modImplementation include(fabricApi.module("fabric-registry-sync-v0", project.fabric_api_version))
     modImplementation include(fabricApi.module("fabric-rendering-v1", project.fabric_api_version))
     modImplementation include(fabricApi.module("fabric-resource-loader-v0", project.fabric_api_version))
 }
@@ -94,7 +97,7 @@ tasks.register("verifyWolfCollarMixinRefmap") {
     }
 }
 
-tasks.register("verifyVanillaServerCompatibility") {
+tasks.register("verifyCustomBossCommonEntrypoint") {
     dependsOn remapJar
 
     doLast {
@@ -110,14 +113,14 @@ tasks.register("verifyVanillaServerCompatibility") {
                 zip.getInputStream(metadataEntry),
                 "UTF-8"
             )
-            if (metadata.environment != "client") {
-                throw new GradleException("Ryo Blocks must remain client-only")
+            if (metadata.environment != "*") {
+                throw new GradleException("Ryo Blocks must declare common environment for the custom boss entity")
             }
-            if (metadata.entrypoints?.main) {
-                throw new GradleException("Server/common entrypoint would break vanilla-only behavior")
+            if (metadata.entrypoints?.main != ["com.go4no.ryoblocks.RyoBlocks"]) {
+                throw new GradleException("Ryo Blocks must register its custom entity from the common entrypoint")
             }
             if (zip.getEntry("com/go4no/ryoblocks/entity/PaSanEndermanEntity.class") != null) {
-                throw new GradleException("Custom Pa-san entity must not ship in the client-only artifact")
+                throw new GradleException("Pa-san Enderman must remain a vanilla Enderman renderer, not a custom entity")
             }
         } finally {
             zip.close()
@@ -133,12 +136,16 @@ tasks.register("verifyStandaloneFabricModules") {
         def expectedModuleIds = [
             "fabric-api-base",
             "fabric-blockrenderlayer-v1",
+            "fabric-item-group-api-v1",
             "fabric-lifecycle-events-v1",
+            "fabric-object-builder-api-v1",
+            "fabric-registry-sync-v0",
             "fabric-rendering-v1",
             "fabric-resource-loader-v0"
         ] as Set
         def requiredProductEntries = [
             "com/go4no/ryoblocks/RyoBlocksClient.class",
+            "com/go4no/ryoblocks/entity/KitaAngelBossEntity.class",
             "com/go4no/ryoblocks/client/KitaAngelBossRenderer.class",
             "assets/ryo-blocks/textures/entity/player/kita_angel.png",
             "assets/ryo-blocks/textures/entity/boss/kita_angel_wings.png",
@@ -211,4 +218,4 @@ tasks.register("verifyStandaloneFabricModules") {
     }
 }
 
-check.dependsOn verifyWolfCollarMixinRefmap, verifyVanillaServerCompatibility, verifyStandaloneFabricModules
+check.dependsOn verifyWolfCollarMixinRefmap, verifyCustomBossCommonEntrypoint, verifyStandaloneFabricModules
