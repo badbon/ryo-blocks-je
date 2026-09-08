@@ -6,6 +6,7 @@ import net.minecraft.client.option.CloudRenderMode;
 import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.resource.DataConfiguration;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
@@ -39,6 +40,8 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
 
     @Override
     public void onEndTick(MinecraftClient client) {
+        muteProofClient(client);
+
         if (client.world == null && !worldStartRequested) {
             worldStartRequested = true;
             LOGGER.info("Creating disposable boss proof world {}", PROOF_WORLD);
@@ -132,6 +135,12 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
             case 2 -> "back-wing-attachment";
             default -> "unknown";
         };
+    }
+
+    private static void muteProofClient(MinecraftClient client) {
+        for (SoundCategory category : SoundCategory.values()) {
+            client.options.getSoundVolumeOption(category).setValue(0.0D);
+        }
     }
 
     private void placeCamera(MinecraftClient client) {

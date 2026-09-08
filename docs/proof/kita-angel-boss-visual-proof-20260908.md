@@ -18,12 +18,18 @@ Accepted captures:
 - `docs/proof/kita-aura-ikuyo-front-attached-texture-20260908-215923.png`
 - `docs/proof/kita-aura-ikuyo-side-attached-texture-20260908-215931.png`
 - `docs/proof/kita-aura-ikuyo-back-attached-texture-20260908-215939.png`
+- `docs/proof/kita-aura-ikuyo-front-white-wings-20260908-221056.png`
+- `docs/proof/kita-aura-ikuyo-side-white-wings-20260908-221104.png`
+- `docs/proof/kita-aura-ikuyo-back-white-wings-20260908-221112.png`
 
 Visual check:
 
 - `source/kita-angel-player-skin.png` and `assets/ryo-blocks/textures/entity/player/kita_angel.png` match the attached `Kita_Ikuyo.png` source file with SHA-256 `B331ED363C698CBDD65CCCC72396AAECB98F175AEB62967C239ECD45AB44EC6B`.
 - Kita's boss body uses Minecraft's slim `PlayerEntityModel` so the supplied 64x64 player skin maps through the standard player UVs.
 - The halo is rendered with a dedicated gold texture as a flat ring above the head.
+- The wing renderer draws the full transparent wing texture as broad angled planes rather than repeated cuboid strips.
+- The wing texture uses ivory feather fill, soft inner feather lines, and a gold rim so it reads as angel wings instead of orange skeletal fins.
+- The proof client mutes all sound categories before staging the world.
 - The final proof captures do not include the comparison `minecraft:wither`.
 - Kita has a human silhouette with normal legs, not a dangling Wither-like lower taper.
 - The wings attach from the upper back/shoulder area, not from the head.
