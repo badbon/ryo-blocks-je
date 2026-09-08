@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
+import com.go4no.ryoblocks.client.BocchiBossRenderer;
 import com.go4no.ryoblocks.client.NijikaVillagerRenderer;
 import com.go4no.ryoblocks.client.PaSanEndermanRenderer;
 import com.go4no.ryoblocks.client.KitaLavaVisualProof;
@@ -28,6 +29,7 @@ public final class RyoBlocksClient implements ClientModInitializer {
         EntityRendererRegistry.register(EntityType.VILLAGER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.WANDERING_TRADER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.ENDERMAN, PaSanEndermanRenderer::new);
+        EntityRendererRegistry.register(EntityType.WITHER, BocchiBossRenderer::new);
         BlockRenderLayerMap.INSTANCE.putFluids(RenderLayer.getTranslucent(), Fluids.LAVA, Fluids.FLOWING_LAVA);
         if (Boolean.getBoolean("ryoBlocks.visualProof")) {
             ClientTickEvents.END_CLIENT_TICK.register(new KitaLavaVisualProof());

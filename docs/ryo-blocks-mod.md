@@ -26,6 +26,12 @@ Every Enderman is rendered client-side as the supplied Pa-san slim-player model.
 
 No custom entity or server behavior is registered. Vanilla and unmodded Fabric servers remain compatible, and dedicated servers do not need the mod.
 
+## Bocchi Wither Boss
+
+Every Wither is rendered client-side as a scaled Bocchi slim-player boss. Its spawning ritual, AI, boss bar, skull attacks, flight, explosion, hitbox, sounds, drops, networking, saved data, and server authority remain Minecraft's native Wither behavior. This is only a renderer swap for the vanilla `minecraft:wither` entity, so vanilla and unmodded Fabric servers remain compatible.
+
+The source skin is `source/bocchi-boss-player-skin.png`; its packaged copy is `assets/ryo-blocks/textures/entity/player/bocchi_boss.png`.
+
 ## Bocchi Wolves
 
 Wild, angry, and tamed wolves retain Minecraft 1.20.1's native model, UV layout, facial details, state differences, resolution, and transparency. Their white/grey fur shading is remapped to Bocchi's tracksuit pink, anchored at `#F6A9AF`, the dominant unshaded jacket fill sampled from the official TV anime character artwork. Dark eyes, nose, mouth, angry red eyes, and other protected details stay vanilla.
