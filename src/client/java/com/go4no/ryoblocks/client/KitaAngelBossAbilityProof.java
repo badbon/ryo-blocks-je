@@ -45,8 +45,15 @@ final class KitaAngelBossAbilityProof {
     private boolean victimWeakened;
     private WitherSkullEntity showcaseProjectile;
     private int impactTicks;
+    private final boolean combatVideo = Boolean.getBoolean("ryoBlocks.bossCombatVideo");
+    private final java.util.concurrent.atomic.AtomicInteger videoSaved = new java.util.concurrent.atomic.AtomicInteger();
+    private int videoFrames;
 
     void tick(MinecraftClient client) {
+        if (combatVideo) {
+            tickCombatVideo(client);
+            return;
+        }
         if (stage >= NAMES.length) {
             client.scheduleStop();
             return;
@@ -85,6 +92,32 @@ final class KitaAngelBossAbilityProof {
 
     private void command(MinecraftServer server, String command) {
         server.getCommandManager().executeWithPrefix(server.getCommandSource(), command);
+    }
+
+    private void tickCombatVideo(MinecraftClient client) {
+        client.options.getFov().setValue(50);
+        client.options.hudHidden = true;
+        client.getTutorialManager().setStep(net.minecraft.client.tutorial.TutorialStep.NONE);
+        client.getToastManager().clear();
+        Vec3d at = focus;
+        client.player.updatePositionAndAngles(at.x - 10, at.y + 5, at.z - 13, -37.57F, 17);
+        client.setCameraEntity(client.player);
+        int tick = ++ticks;
+        if (tick <= 340) {
+            client.getServer().execute(() -> {
+                if (tick == 1) reset(client.getServer());
+                observe(client.getServer(), 1, tick);
+            });
+        }
+        if (tick >= 40 && videoFrames < 300) {
+            String name = String.format(java.util.Locale.ROOT, "kita-combat-%04d.png", videoFrames++);
+            ScreenshotRecorder.saveScreenshot(client.runDirectory, name, client.getFramebuffer(),
+                message -> videoSaved.incrementAndGet());
+        }
+        if (videoSaved.get() == 300 || tick > 600) {
+            LOG.info("COMBAT VIDEO: {} frames saved; {}", videoSaved.get(), evidence);
+            client.scheduleStop();
+        }
     }
 
     private void reset(MinecraftServer server) {
