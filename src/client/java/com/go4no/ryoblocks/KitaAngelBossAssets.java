@@ -11,6 +11,10 @@ public final class KitaAngelBossAssets {
         "ryo-blocks",
         "textures/entity/boss/kita_angel_wings.png"
     );
+    public static final Identifier HALO_TEXTURE = new Identifier(
+        "ryo-blocks",
+        "textures/entity/boss/kita_angel_halo.png"
+    );
     public static final boolean SLIM_ARMS = true;
 
     private KitaAngelBossAssets() {

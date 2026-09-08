@@ -38,8 +38,7 @@ public final class KitaAngelBossModel<T extends WitherEntity> extends EntityMode
         root.addChild(
             "head",
             ModelPartBuilder.create()
-                .uv(0, 0).cuboid(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F)
-                .uv(32, 0).cuboid(-4.4F, -8.4F, -4.4F, 8.8F, 8.8F, 8.8F, new Dilation(0.2F)),
+                .uv(0, 0).cuboid(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F),
             ModelTransform.pivot(0.0F, 1.0F, -0.8F)
         );
         root.addChild(
@@ -85,11 +84,11 @@ public final class KitaAngelBossModel<T extends WitherEntity> extends EntityMode
         root.addChild(
             "halo",
             ModelPartBuilder.create()
-                .uv(0, 16).cuboid(-5.5F, -0.5F, -0.5F, 11.0F, 1.0F, 1.0F)
-                .uv(0, 18).cuboid(-5.5F, -4.5F, -0.5F, 11.0F, 1.0F, 1.0F)
-                .uv(0, 20).cuboid(-5.5F, -4.5F, -0.5F, 1.0F, 5.0F, 1.0F)
-                .uv(0, 20).cuboid(4.5F, -4.5F, -0.5F, 1.0F, 5.0F, 1.0F),
-            ModelTransform.of(0.0F, -7.4F, 2.2F, -0.16F, 0.0F, 0.0F)
+                .uv(0, 0).cuboid(-5.5F, -0.5F, -3.5F, 11.0F, 1.0F, 1.0F)
+                .uv(0, 0).cuboid(-5.5F, -0.5F, 2.5F, 11.0F, 1.0F, 1.0F)
+                .uv(0, 0).cuboid(-5.5F, -0.5F, -3.5F, 1.0F, 1.0F, 7.0F)
+                .uv(0, 0).cuboid(4.5F, -0.5F, -3.5F, 1.0F, 1.0F, 7.0F),
+            ModelTransform.pivot(0.0F, -8.2F, -0.8F)
         );
 
         return TexturedModelData.of(modelData, 64, 64);
@@ -110,6 +109,15 @@ public final class KitaAngelBossModel<T extends WitherEntity> extends EntityMode
 
     @Override
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
+        this.halo.visible = false;
         root.render(matrices, vertices, light, overlay, red, green, blue, alpha);
+        this.halo.visible = true;
+    }
+
+    public void renderHalo(MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
+        matrices.push();
+        matrices.translate(this.root.pivotX / 16.0F, this.root.pivotY / 16.0F, this.root.pivotZ / 16.0F);
+        this.halo.render(matrices, vertices, light, overlay);
+        matrices.pop();
     }
 }

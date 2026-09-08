@@ -17,6 +17,7 @@ public final class KitaAngelBossRenderer<T extends WitherEntity> extends MobEnti
             new KitaAngelBossModel<>(context.getPart(KitaAngelBossModelLayers.KITA_ANGEL_BOSS)),
             1.15F
         );
+        this.addFeature(new KitaAngelHaloFeatureRenderer<>(this));
         this.addFeature(new KitaAngelWingsFeatureRenderer<>(this));
     }
 
