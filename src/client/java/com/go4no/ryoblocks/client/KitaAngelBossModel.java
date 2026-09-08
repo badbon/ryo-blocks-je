@@ -25,8 +25,12 @@ public final class KitaAngelBossModel<T extends WitherEntity> extends PlayerEnti
         this.rightArm.roll = 0.32F;
         this.leftArm.pitch = 0.46F;
         this.leftArm.roll = -0.32F;
+        this.rightSleeve.copyTransform(this.rightArm);
+        this.leftSleeve.copyTransform(this.leftArm);
         float legSway = MathHelper.sin(animationProgress * 0.06F) * 0.08F;
         this.rightLeg.pitch = -legSway;
         this.leftLeg.pitch = legSway;
+        this.rightPants.copyTransform(this.rightLeg);
+        this.leftPants.copyTransform(this.leftLeg);
     }
 }

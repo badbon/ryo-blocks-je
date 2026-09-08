@@ -21,6 +21,9 @@ Accepted captures:
 - `docs/proof/kita-aura-ikuyo-front-white-wings-20260908-221056.png`
 - `docs/proof/kita-aura-ikuyo-side-white-wings-20260908-221104.png`
 - `docs/proof/kita-aura-ikuyo-back-white-wings-20260908-221112.png`
+- `docs/proof/kita-aura-ikuyo-front-sleeve-sync-20260908-221410.png`
+- `docs/proof/kita-aura-ikuyo-side-sleeve-sync-20260908-221418.png`
+- `docs/proof/kita-aura-ikuyo-back-sleeve-sync-20260908-221426.png`
 
 Visual check:
 
@@ -34,4 +37,5 @@ Visual check:
 - Kita has a human silhouette with normal legs, not a dangling Wither-like lower taper.
 - The wings attach from the upper back/shoulder area, not from the head.
 - Left and right wings mirror correctly and read as layered feather structures rather than flat abstract quads.
+- The sleeve and pants overlay layers copy the final posed arm/leg transforms, so no separate leftover overlay floats in front of the base limbs.
 - Client-side Wither smoke particles are suppressed for Kita.
