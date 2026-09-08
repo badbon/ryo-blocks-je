@@ -41,6 +41,9 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
     @Override
     public void onEndTick(MinecraftClient client) {
         muteProofClient(client);
+        if (client.getOverlay() != null) {
+            return;
+        }
 
         if (client.world == null && !worldStartRequested) {
             worldStartRequested = true;
@@ -92,6 +95,7 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
             client.getWindow().setWindowedSize(1280, 720);
             client.options.tutorialStep = net.minecraft.client.tutorial.TutorialStep.NONE;
             client.options.getCloudRenderMode().setValue(CloudRenderMode.OFF);
+            client.options.getFov().setValue(50);
             client.options.hudHidden = false;
             return;
         }
@@ -117,7 +121,7 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
 
         if (screenshotSaved && ++savedTicks >= CAPTURE_SETTLE_TICKS) {
             captureIndex++;
-            if (captureIndex < 3) {
+            if (captureIndex < 4) {
                 screenshotRequested = false;
                 screenshotSaved = false;
                 readyTicks = 0;
@@ -133,6 +137,7 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
             case 0 -> "front-clean-face";
             case 1 -> "side-wing-attachment";
             case 2 -> "back-wing-attachment";
+            case 3 -> "three-quarter-wings";
             default -> "unknown";
         };
     }
@@ -147,6 +152,7 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
         switch (captureIndex) {
             case 1 -> client.player.updatePositionAndAngles(-10.0, 183.0, 4.5, -90.0F, 8.0F);
             case 2 -> client.player.updatePositionAndAngles(0.0, 183.0, 14.0, 180.0F, 8.0F);
+            case 3 -> client.player.updatePositionAndAngles(-8.0, 183.0, -4.0, -45.0F, 8.0F);
             default -> client.player.updatePositionAndAngles(0.5, 182.0, -8.0, 0.0F, 10.0F);
         }
     }

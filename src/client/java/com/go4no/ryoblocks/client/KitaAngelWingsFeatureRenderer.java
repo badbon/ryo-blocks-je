@@ -1,98 +1,81 @@
 package com.go4no.ryoblocks.client;
 
-import com.go4no.ryoblocks.KitaAngelBossAssets;
+import net.minecraft.client.model.ModelData;
+import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.model.ModelPartBuilder;
+import net.minecraft.client.model.ModelPartData;
+import net.minecraft.client.model.ModelTransform;
+import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.boss.WitherEntity;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
+import net.minecraft.util.Identifier;
 
 public final class KitaAngelWingsFeatureRenderer<T extends WitherEntity> extends FeatureRenderer<T, KitaAngelBossModel<T>> {
-    private static final float WING_HALF_WIDTH = 23.5F;
-    private static final float WING_TOP = -10.2F;
-    private static final float WING_BOTTOM = 15.0F;
-    private static final float WING_ROOT_Z = 3.1F;
-    private static final float WING_TIP_Z = 8.8F;
+    private static final Identifier FEATHERS = new Identifier("minecraft", "textures/block/snow.png");
+    private final ModelPart left = createWing();
+    private final ModelPart right = createWing();
 
     public KitaAngelWingsFeatureRenderer(FeatureRendererContext<T, KitaAngelBossModel<T>> context) {
         super(context);
     }
 
+    private static ModelPart createWing() {
+        ModelData data = new ModelData();
+        ModelPartData shoulder = data.getRoot().addChild("shoulder", ModelPartBuilder.create(), ModelTransform.NONE);
+        feather(shoulder, "root", 0, 0, 0, 4, 9, 3, -0.45F);
+        feather(shoulder, "inner0", 2, 0, 0.4F, 3, 16, 2, -0.26F);
+        feather(shoulder, "inner1", 4.5F, -2, 0.7F, 3, 18, 2, -0.32F);
+        feather(shoulder, "inner2", 7, -4, 1, 3, 19, 2, -0.38F);
+        ModelPartData outer = shoulder.addChild("outer", ModelPartBuilder.create(), ModelTransform.pivot(9, -5, 1));
+        // Flight feathers climb into an arch, with squared steps along the trailing edge.
+        for (int i = 0; i < 5; i++) {
+            feather(outer, "flight" + i, i * 2.5F, -i * 2.1F, i * 0.25F,
+                3, 19 - i * 1.8F, 2, -0.40F - i * 0.10F);
+            feather(outer, "middle" + i, i * 2.5F + 0.2F, -i * 2.1F + 2, -0.5F + i * 0.25F,
+                3.2F, 10 - i * 0.6F, 2.6F, -0.34F - i * 0.10F);
+            feather(outer, "cover" + i, i * 2.5F - 0.3F, -i * 2.1F - 0.6F, -0.8F + i * 0.25F,
+                3.4F, 6.5F, 3.2F, -0.40F - i * 0.10F);
+        }
+        for (int i = 0; i < 3; i++) {
+            feather(shoulder, "down" + i, 1 + i * 2.6F, -1 - i * 1.8F, -0.8F,
+                3.5F, 6.5F, 3.4F, -0.35F);
+        }
+        return TexturedModelData.of(data, 16, 16).createModel().getChild("shoulder");
+    }
+
+    private static void feather(ModelPartData parent, String name, float x, float y, float z,
+                                float width, float length, float depth, float angle) {
+        parent.addChild(name, ModelPartBuilder.create()
+            .uv(0, 0).cuboid(0, 0, -depth / 2, width, length - 2, depth)
+            .uv(0, 0).cuboid(0.5F, length - 2, -depth / 2, width - 1, 2, depth),
+            ModelTransform.of(x, y, z, 0, 0, angle));
+    }
+
     @Override
-    public void render(
-        MatrixStack matrices,
-        VertexConsumerProvider vertexConsumers,
-        int light,
-        T wither,
-        float limbAngle,
-        float limbDistance,
-        float tickDelta,
-        float animationProgress,
-        float headYaw,
-        float headPitch
-    ) {
-        VertexConsumer vertices = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(KitaAngelBossAssets.WINGS_TEXTURE));
+    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T wither,
+                       float limbAngle, float limbDistance, float tickDelta, float animationProgress,
+                       float headYaw, float headPitch) {
+        float breath = (float)Math.sin(animationProgress * 0.055F);
+        renderWing(matrices, vertexConsumers, light, left, 1, breath);
+        renderWing(matrices, vertexConsumers, light, right, -1, breath);
+    }
+
+    private void renderWing(MatrixStack matrices, VertexConsumerProvider consumers, int light,
+                            ModelPart wing, int side, float breath) {
         matrices.push();
-        matrices.scale(1.0F / 16.0F, 1.0F / 16.0F, 1.0F / 16.0F);
-        MatrixStack.Entry entry = matrices.peek();
-        Matrix4f position = entry.getPositionMatrix();
-        Matrix3f normal = entry.getNormalMatrix();
-
-        float flap = (float)Math.sin(animationProgress * 0.12F) * 1.1F;
-        float yTop = WING_TOP + flap * 0.18F;
-        float yBottom = WING_BOTTOM - flap * 0.1F;
-        drawWingHalf(vertices, position, normal, -WING_HALF_WIDTH, 0.0F, yTop, yBottom, 0.0F, 0.5F, light);
-        drawWingHalf(vertices, position, normal, 0.0F, WING_HALF_WIDTH, yTop, yBottom, 0.5F, 1.0F, light);
+        getContextModel().body.rotate(matrices);
+        matrices.translate(side * 2.0F / 16, 1.0F / 16, 3.0F / 16);
+        matrices.scale(side, 1, 1);
+        wing.yaw = -0.24F + breath * 0.045F;
+        wing.roll = breath * 0.018F;
+        wing.getChild("outer").yaw = -0.12F + breath * 0.035F;
+        wing.render(matrices, consumers.getBuffer(RenderLayer.getEntityCutoutNoCull(FEATHERS)),
+            light, OverlayTexture.DEFAULT_UV);
         matrices.pop();
-    }
-
-    private static void drawWingHalf(
-        VertexConsumer vertices,
-        Matrix4f position,
-        Matrix3f normal,
-        float left,
-        float right,
-        float top,
-        float bottom,
-        float uLeft,
-        float uRight,
-        int light
-    ) {
-        float leftZ = left < 0.0F ? WING_TIP_Z : WING_ROOT_Z;
-        float rightZ = right > 0.0F ? WING_TIP_Z : WING_ROOT_Z;
-        vertex(vertices, position, normal, left, bottom, leftZ, uLeft, 1.0F, light);
-        vertex(vertices, position, normal, right, bottom, rightZ, uRight, 1.0F, light);
-        vertex(vertices, position, normal, right, top, rightZ, uRight, 0.0F, light);
-        vertex(vertices, position, normal, left, top, leftZ, uLeft, 0.0F, light);
-
-        vertex(vertices, position, normal, left, top, leftZ + 0.02F, uLeft, 0.0F, light);
-        vertex(vertices, position, normal, right, top, rightZ + 0.02F, uRight, 0.0F, light);
-        vertex(vertices, position, normal, right, bottom, rightZ + 0.02F, uRight, 1.0F, light);
-        vertex(vertices, position, normal, left, bottom, leftZ + 0.02F, uLeft, 1.0F, light);
-    }
-
-    private static void vertex(
-        VertexConsumer vertices,
-        Matrix4f position,
-        Matrix3f normal,
-        float x,
-        float y,
-        float z,
-        float u,
-        float v,
-        int light
-    ) {
-        vertices.vertex(position, x, y, z)
-            .color(255, 255, 255, 255)
-            .texture(u, v)
-            .overlay(OverlayTexture.DEFAULT_UV)
-            .light(light)
-            .normal(normal, 0.0F, 0.0F, -1.0F)
-            .next();
     }
 }
