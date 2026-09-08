@@ -34,7 +34,7 @@ public final class KitaAngelBossRenderer<T extends WitherEntity> extends MobEnti
     ) {
         matrices.push();
         matrices.scale(BOSS_SCALE, BOSS_SCALE, BOSS_SCALE);
-        float hover = -3.0F + MathHelper.sin((wither.age + tickDelta) * 0.08F) * 0.6F;
+        float hover = -3.0F + MathHelper.sin((wither.age + tickDelta) * 0.025F) * 0.6F;
         matrices.translate(0.0F, hover / 16.0F, 0.0F);
         super.render(wither, entityYaw, tickDelta, matrices, vertexConsumers, light);
         matrices.pop();

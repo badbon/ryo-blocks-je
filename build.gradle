@@ -29,6 +29,9 @@ loom {
                 if (project.hasProperty("bossCombatVideo")) {
                     property "ryoBlocks.bossCombatVideo", "true"
                 }
+                if (project.hasProperty("bossBlockImpactProof")) {
+                    property "ryoBlocks.bossBlockImpactProof", "true"
+                }
                 if (project.hasProperty("bossAbilityScene")) {
                     property "ryoBlocks.bossAbilityScene", project.property("bossAbilityScene").toString()
                 }

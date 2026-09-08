@@ -48,8 +48,16 @@ final class KitaAngelBossAbilityProof {
     private final boolean combatVideo = Boolean.getBoolean("ryoBlocks.bossCombatVideo");
     private final java.util.concurrent.atomic.AtomicInteger videoSaved = new java.util.concurrent.atomic.AtomicInteger();
     private int videoFrames;
+    private final boolean blockImpactProof = Boolean.getBoolean("ryoBlocks.bossBlockImpactProof");
+    private final java.util.concurrent.atomic.AtomicInteger blockPictures = new java.util.concurrent.atomic.AtomicInteger();
+    private volatile boolean blockChecksDone;
+    private int blockChecksPassed;
 
     void tick(MinecraftClient client) {
+        if (blockImpactProof) {
+            tickBlockImpactProof(client);
+            return;
+        }
         if (combatVideo) {
             tickCombatVideo(client);
             return;
@@ -103,10 +111,17 @@ final class KitaAngelBossAbilityProof {
         client.player.updatePositionAndAngles(at.x - 10, at.y + 5, at.z - 13, -37.57F, 17);
         client.setCameraEntity(client.player);
         int tick = ++ticks;
-        if (tick <= 340) {
+        if (tick <= 500) {
             client.getServer().execute(() -> {
                 if (tick == 1) reset(client.getServer());
                 observe(client.getServer(), 1, tick);
+                if (tick % 20 == 0) LOG.info("COMBAT HEIGHT tick={} y={}", tick, boss.getY());
+                if (tick == 340 || tick == 500) {
+                    double expectedHeight = target.getY() + (tick == 340 ? 5 : 0);
+                    LOG.info("FLIGHT CHECK phase={} error={} PASS={}", tick == 340 ? "hover" : "half-health",
+                        Math.abs(boss.getY() - expectedHeight), Math.abs(boss.getY() - expectedHeight) < 0.1);
+                }
+                if (tick == 360) boss.setHealth(120);
             });
         }
         if (tick >= 40 && videoFrames < 300) {
@@ -114,9 +129,75 @@ final class KitaAngelBossAbilityProof {
             ScreenshotRecorder.saveScreenshot(client.runDirectory, name, client.getFramebuffer(),
                 message -> videoSaved.incrementAndGet());
         }
-        if (videoSaved.get() == 300 || tick > 600) {
+        if ((tick > 500 && videoSaved.get() == 300) || tick > 650) {
             LOG.info("COMBAT VIDEO: {} frames saved; {}", videoSaved.get(), evidence);
             client.scheduleStop();
+        }
+    }
+
+    private void tickBlockImpactProof(MinecraftClient client) {
+        client.options.getFov().setValue(50);
+        client.options.hudHidden = true;
+        client.getTutorialManager().setStep(net.minecraft.client.tutorial.TutorialStep.NONE);
+        client.getToastManager().clear();
+        client.player.updatePositionAndAngles(-4, 187, -1, -32.47F, 19);
+        client.setCameraEntity(client.player);
+        int tick = ticks++;
+        int trial = tick / 80;
+        int localTick = tick % 80;
+        if (trial < 10) {
+            client.getServer().execute(() -> observeBlockImpact(client.getServer(), trial, localTick));
+            if (localTick == 18 || localTick == 70) {
+                String name = "kita-block-impact-" + trial + (localTick == 18 ? "-before.png" : "-after.png");
+                ScreenshotRecorder.saveScreenshot(client.runDirectory, name, client.getFramebuffer(),
+                    message -> blockPictures.incrementAndGet());
+            }
+        } else if (blockChecksDone && blockPictures.get() == 20) {
+            LOG.info("BLOCK IMPACT CHECKS: {}/10 passed", blockChecksPassed);
+            client.scheduleStop();
+        } else if (tick > 1000) {
+            LOG.error("Block proof did not finish: checks={}, pictures={}", blockChecksPassed, blockPictures.get());
+            client.scheduleStop();
+        }
+    }
+
+    private void observeBlockImpact(MinecraftServer server, int trial, int tick) {
+        ServerWorld world = server.getOverworld();
+        int scenario = trial / 2;
+        boolean vanilla = trial % 2 == 1;
+        if (tick == 0) {
+            reset(server);
+            boss.setAiDisabled(true);
+            boss.refreshPositionAndAngles(-3, 180, 4, 0, 0);
+            String material = scenario == 0 || scenario == 3 ? "dirt" : scenario == 4 ? "bedrock" : "stone";
+            command(server, "fill 0 180 10 6 185 10 " + material);
+            command(server, "gamerule mobGriefing " + (scenario != 3));
+        }
+        if (tick == 20) {
+            LivingEntity owner = boss;
+            if (vanilla) {
+                var wither = EntityType.WITHER.create(world);
+                wither.refreshPositionAndAngles(-5, 180, 4, 0, 0);
+                wither.setAiDisabled(true);
+                world.spawnEntity(wither);
+                owner = wither;
+            }
+            showcaseProjectile = new WitherSkullEntity(world, owner, 0, 0, 1);
+            showcaseProjectile.setPosition(3.5, 182.5, 4);
+            showcaseProjectile.setCharged(scenario == 1 || scenario == 4);
+            world.spawnEntity(showcaseProjectile);
+        }
+        if (tick == 65) {
+            int removed = 0;
+            for (BlockPos pos : BlockPos.iterate(0, 180, 10, 6, 185, 10)) {
+                if (world.getBlockState(pos).isAir()) removed++;
+            }
+            boolean expectBreak = scenario < 2;
+            boolean passed = showcaseProjectile.isRemoved() && (expectBreak ? removed > 0 : removed == 0);
+            if (passed) blockChecksPassed++;
+            LOG.info("BLOCK IMPACT trial={} owner={} scenario={} removed={} projectileRemoved={} PASS={}",
+                trial, vanilla ? "vanilla" : "kita", scenario, removed, showcaseProjectile.isRemoved(), passed);
+            if (trial == 9) blockChecksDone = true;
         }
     }
 

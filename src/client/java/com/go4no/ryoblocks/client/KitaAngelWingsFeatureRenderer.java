@@ -60,20 +60,23 @@ public final class KitaAngelWingsFeatureRenderer<T extends WitherEntity> extends
     public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T wither,
                        float limbAngle, float limbDistance, float tickDelta, float animationProgress,
                        float headYaw, float headPitch) {
-        float breath = (float)Math.sin(animationProgress * 0.055F);
-        renderWing(matrices, vertexConsumers, light, left, 1, breath);
-        renderWing(matrices, vertexConsumers, light, right, -1, breath);
+        float phase = animationProgress * 0.065F;
+        float sweep = (float)Math.sin(phase);
+        float tipSweep = (float)Math.sin(phase - 0.55F);
+        renderWing(matrices, vertexConsumers, light, left, 1, sweep, tipSweep);
+        renderWing(matrices, vertexConsumers, light, right, -1, sweep, tipSweep);
     }
 
     private void renderWing(MatrixStack matrices, VertexConsumerProvider consumers, int light,
-                            ModelPart wing, int side, float breath) {
+                            ModelPart wing, int side, float sweep, float tipSweep) {
         matrices.push();
         getContextModel().body.rotate(matrices);
         matrices.translate(side * 2.0F / 16, 1.0F / 16, 3.0F / 16);
         matrices.scale(side, 1, 1);
-        wing.yaw = -0.24F + breath * 0.045F;
-        wing.roll = breath * 0.018F;
-        wing.getChild("outer").yaw = -0.12F + breath * 0.035F;
+        wing.yaw = -0.32F + sweep * 0.30F;
+        wing.roll = sweep * 0.28F;
+        wing.getChild("outer").yaw = -0.12F + tipSweep * 0.18F;
+        wing.getChild("outer").roll = tipSweep * 0.10F;
         wing.render(matrices, consumers.getBuffer(RenderLayer.getEntityCutoutNoCull(FEATHERS)),
             light, OverlayTexture.DEFAULT_UV);
         matrices.pop();
