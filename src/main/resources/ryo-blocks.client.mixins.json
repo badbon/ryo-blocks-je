@@ -12,6 +12,7 @@
     "terrain.VertexBufferTerrainBatchMixin",
     "terrain.WorldRendererChunkInfoMixin",
     "terrain.WorldRendererTerrainBatchMixin",
+    "WitherEntityMixin",
     "WolfCollarFeatureRendererMixin",
     "WindowMixin"
   ],

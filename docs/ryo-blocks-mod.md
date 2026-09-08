@@ -26,9 +26,9 @@ Every Enderman is rendered client-side as the supplied Pa-san slim-player model.
 
 No custom entity or server behavior is registered. Vanilla and unmodded Fabric servers remain compatible, and dedicated servers do not need the mod.
 
-## Kita Angel Wither Boss
+## Kita "Aura" Ikuyo Angel Boss
 
-Every Wither is rendered client-side as a scaled Kita slim-player angel boss with separate transparent wing geometry behind the shoulders. Its spawning ritual, AI, boss bar, skull attacks, flight, explosion, hitbox, sounds, drops, networking, saved data, and server authority remain Minecraft's native Wither behavior. This is only a renderer swap for the vanilla `minecraft:wither` entity, so vanilla and unmodded Fabric servers remain compatible.
+Kita "Aura" Ikuyo is rendered client-side as a scaled human Kita slim-player angel with normal head, torso, arms, legs, a halo, and separate transparent wing geometry behind the shoulders. Its AI, boss bar, skull attacks, flight, explosion, hitbox, sounds, drops, networking, saved data, and server authority remain Minecraft's native Wither behavior through the custom `ryo-blocks:kita_angel_boss` entity.
 
 The source skin is `source/kita-angel-player-skin.png`; its packaged copy is `assets/ryo-blocks/textures/entity/player/kita_angel.png`. The source wings are `source/kita-angel-wings.png`; their packaged copy is `assets/ryo-blocks/textures/entity/boss/kita_angel_wings.png`.
 

@@ -17,19 +17,17 @@ import net.minecraft.util.math.MathHelper;
 public final class KitaAngelBossModel<T extends WitherEntity> extends EntityModel<T> {
     private final ModelPart root;
     private final ModelPart head;
-    private final ModelPart leftEmitter;
-    private final ModelPart rightEmitter;
     private final ModelPart halo;
-    private final ModelPart lowerAura;
+    private final ModelPart leftLeg;
+    private final ModelPart rightLeg;
 
     public KitaAngelBossModel(ModelPart root) {
         super(RenderLayer::getEntityTranslucent);
         this.root = root;
         this.head = root.getChild("head");
-        this.leftEmitter = root.getChild("left_emitter");
-        this.rightEmitter = root.getChild("right_emitter");
         this.halo = root.getChild("halo");
-        this.lowerAura = root.getChild("lower_aura");
+        this.leftLeg = root.getChild("left_leg");
+        this.rightLeg = root.getChild("right_leg");
     }
 
     public static TexturedModelData getTexturedModelData() {
@@ -71,12 +69,18 @@ public final class KitaAngelBossModel<T extends WitherEntity> extends EntityMode
             ModelTransform.of(-4.7F, 3.1F, -0.2F, 0.46F, 0.0F, 0.32F)
         );
         root.addChild(
-            "lower_aura",
+            "left_leg",
             ModelPartBuilder.create()
-                .uv(0, 32).cuboid(-4.2F, 0.0F, -2.0F, 8.4F, 4.8F, 4.0F)
-                .uv(24, 48).cuboid(-2.4F, 4.8F, -1.1F, 4.8F, 3.6F, 2.2F)
-                .uv(16, 48).cuboid(-0.8F, 8.2F, -0.8F, 1.6F, 4.8F, 1.6F),
-            ModelTransform.pivot(0.0F, 13.0F, 0.0F)
+                .uv(16, 48).cuboid(-1.8F, 0.0F, -1.7F, 3.6F, 12.0F, 3.6F, slim)
+                .uv(0, 48).cuboid(-2.0F, 11.2F, -2.1F, 4.0F, 1.3F, 4.2F, new Dilation(0.05F)),
+            ModelTransform.pivot(1.9F, 13.0F, 0.0F)
+        );
+        root.addChild(
+            "right_leg",
+            ModelPartBuilder.create()
+                .uv(0, 16).cuboid(-1.8F, 0.0F, -1.7F, 3.6F, 12.0F, 3.6F, slim)
+                .uv(0, 53).cuboid(-2.0F, 11.2F, -2.1F, 4.0F, 1.3F, 4.2F, new Dilation(0.05F)),
+            ModelTransform.pivot(-1.9F, 13.0F, 0.0F)
         );
         root.addChild(
             "halo",
@@ -86,23 +90,6 @@ public final class KitaAngelBossModel<T extends WitherEntity> extends EntityMode
                 .uv(0, 20).cuboid(-5.5F, -4.5F, -0.5F, 1.0F, 5.0F, 1.0F)
                 .uv(0, 20).cuboid(4.5F, -4.5F, -0.5F, 1.0F, 5.0F, 1.0F),
             ModelTransform.of(0.0F, -7.4F, 2.2F, -0.16F, 0.0F, 0.0F)
-        );
-
-        root.addChild(
-            "left_emitter",
-            ModelPartBuilder.create()
-                .uv(0, 0).cuboid(-3.0F, -3.0F, -3.0F, 6.0F, 6.0F, 6.0F)
-                .uv(0, 16).cuboid(-3.4F, -3.4F, -0.5F, 6.8F, 1.0F, 1.0F)
-                .uv(0, 16).cuboid(-3.4F, 2.4F, -0.5F, 6.8F, 1.0F, 1.0F),
-            ModelTransform.of(9.4F, 4.0F, -1.3F, 0.0F, -0.18F, -0.08F)
-        );
-        root.addChild(
-            "right_emitter",
-            ModelPartBuilder.create()
-                .uv(0, 0).cuboid(-3.0F, -3.0F, -3.0F, 6.0F, 6.0F, 6.0F)
-                .uv(0, 16).cuboid(-3.4F, -3.4F, -0.5F, 6.8F, 1.0F, 1.0F)
-                .uv(0, 16).cuboid(-3.4F, 2.4F, -0.5F, 6.8F, 1.0F, 1.0F),
-            ModelTransform.of(-9.4F, 4.0F, -1.3F, 0.0F, 0.18F, 0.08F)
         );
 
         return TexturedModelData.of(modelData, 64, 64);
@@ -116,11 +103,9 @@ public final class KitaAngelBossModel<T extends WitherEntity> extends EntityMode
         float hover = MathHelper.sin(animationProgress * 0.08F) * 0.6F;
         this.root.pivotY = -3.0F + hover;
         this.halo.yaw = animationProgress * 0.015F;
-        this.leftEmitter.yaw = 0.18F + MathHelper.sin(animationProgress * 0.05F) * 0.08F;
-        this.rightEmitter.yaw = -0.18F - MathHelper.sin(animationProgress * 0.05F) * 0.08F;
-        this.leftEmitter.roll = MathHelper.sin(animationProgress * 0.07F) * 0.05F;
-        this.rightEmitter.roll = -this.leftEmitter.roll;
-        this.lowerAura.pitch = MathHelper.sin(animationProgress * 0.06F) * 0.04F;
+        float legSway = MathHelper.sin(animationProgress * 0.06F) * 0.08F;
+        this.leftLeg.pitch = legSway;
+        this.rightLeg.pitch = -legSway;
     }
 
     @Override

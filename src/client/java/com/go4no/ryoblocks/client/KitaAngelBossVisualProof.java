@@ -83,7 +83,7 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
                 commands.executeWithPrefix(source, "fill -12 176 -10 12 190 14 minecraft:air");
                 commands.executeWithPrefix(source, "fill -10 179 -6 10 179 10 minecraft:smooth_quartz");
                 commands.executeWithPrefix(source, "give " + playerName + " ryo-blocks:kita_angel_boss_spawn_egg");
-                commands.executeWithPrefix(source, "summon ryo-blocks:kita_angel_boss 0 182 4 {NoAI:1b,Silent:1b,Invulnerable:1b,Invul:0,Rotation:[180.0f,0.0f],CustomName:'{\"text\":\"Kita Angel Boss\",\"color\":\"light_purple\"}'}");
+                commands.executeWithPrefix(source, "summon ryo-blocks:kita_angel_boss 0 182 4 {NoAI:1b,Silent:1b,Invulnerable:1b,Invul:0,Rotation:[180.0f,0.0f],CustomName:'{\"text\":\"Kita \\\\\"Aura\\\\\" Ikuyo\",\"color\":\"light_purple\"}'}");
                 commands.executeWithPrefix(source, "summon minecraft:wither 5 182 5 {NoAI:1b,Silent:1b,Invulnerable:1b,Invul:0,Rotation:[180.0f,0.0f],CustomName:'{\"text\":\"Vanilla Wither\",\"color\":\"gray\"}'}");
                 commands.executeWithPrefix(source, "tp " + playerName + " 0 182 -9 0 10");
             });

@@ -8,7 +8,7 @@
 - Ryo player skin (forced)
 - Nijika villagers and chests
 - Pa-san Enderman with vanilla Enderman behavior
-- Kita Angel boss as its own spawn-egg-only Wither-behavior boss
+- Kita "Aura" Ikuyo as a human angel spawn-egg-only Wither-behavior boss
 - Bocchi pink wolves and collar
 - Kita appears directly on animated lava and lavafalls
 - RyoCraft Minecraft Ryo Edition main menu (subtle main menu title change :D)
