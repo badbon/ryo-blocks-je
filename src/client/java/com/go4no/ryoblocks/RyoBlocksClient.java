@@ -2,13 +2,10 @@ package com.go4no.ryoblocks;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
-import com.go4no.ryoblocks.client.KitaAngelBossModel;
-import com.go4no.ryoblocks.client.KitaAngelBossModelLayers;
 import com.go4no.ryoblocks.client.KitaAngelBossRenderer;
 import com.go4no.ryoblocks.client.KitaAngelBossVisualProof;
 import com.go4no.ryoblocks.client.NijikaVillagerRenderer;
@@ -44,10 +41,6 @@ public final class RyoBlocksClient implements ClientModInitializer {
         EntityRendererRegistry.register(EntityType.VILLAGER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.WANDERING_TRADER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.ENDERMAN, PaSanEndermanRenderer::new);
-        EntityModelLayerRegistry.registerModelLayer(
-            KitaAngelBossModelLayers.KITA_ANGEL_BOSS,
-            KitaAngelBossModel::getTexturedModelData
-        );
         EntityRendererRegistry.register(RyoBlocks.KITA_ANGEL_BOSS, KitaAngelBossRenderer::new);
         BlockRenderLayerMap.INSTANCE.putFluids(RenderLayer.getTranslucent(), Fluids.LAVA, Fluids.FLOWING_LAVA);
         boolean bossVisualProof = Boolean.getBoolean("ryoBlocks.bossVisualProof");

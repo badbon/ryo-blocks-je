@@ -15,14 +15,14 @@ Accepted captures:
 - `docs/proof/kita-aura-ikuyo-front-clean-face-20260908-213253.png`
 - `docs/proof/kita-aura-ikuyo-side-wing-attachment-20260908-213301.png`
 - `docs/proof/kita-aura-ikuyo-back-wing-attachment-20260908-213309.png`
-- `docs/proof/kita-aura-ikuyo-front-clean-face-gold-halo-20260908-215037.png`
-- `docs/proof/kita-aura-ikuyo-side-gold-halo-20260908-215045.png`
-- `docs/proof/kita-aura-ikuyo-back-gold-halo-20260908-215052.png`
+- `docs/proof/kita-aura-ikuyo-front-attached-texture-20260908-215923.png`
+- `docs/proof/kita-aura-ikuyo-side-attached-texture-20260908-215931.png`
+- `docs/proof/kita-aura-ikuyo-back-attached-texture-20260908-215939.png`
 
 Visual check:
 
-- Kita's face uses the clean warm face pixels from the source skin; the white/olive zombie-looking face pixels are gone.
-- The front head overlay cube is disabled for the boss model so the in-game face uses the source skin's base face without extra jumbled overlay geometry.
+- `source/kita-angel-player-skin.png` and `assets/ryo-blocks/textures/entity/player/kita_angel.png` match the attached `Kita_Ikuyo.png` source file with SHA-256 `B331ED363C698CBDD65CCCC72396AAECB98F175AEB62967C239ECD45AB44EC6B`.
+- Kita's boss body uses Minecraft's slim `PlayerEntityModel` so the supplied 64x64 player skin maps through the standard player UVs.
 - The halo is rendered with a dedicated gold texture as a flat ring above the head.
 - The final proof captures do not include the comparison `minecraft:wither`.
 - Kita has a human silhouette with normal legs, not a dangling Wither-like lower taper.
