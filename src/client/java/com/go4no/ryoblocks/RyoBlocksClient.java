@@ -21,15 +21,26 @@ import net.minecraft.fluid.Fluids;
 import net.minecraft.util.Identifier;
 
 public final class RyoBlocksClient implements ClientModInitializer {
+    private static final String BASE_RESOURCE_PACK = "ryo_blocks";
+    private static final String RENDERER_COMPAT_RESOURCE_PACK = "ryo_blocks_renderer_compat";
+
     @Override
     public void onInitializeClient() {
-        FabricLoader.getInstance().getModContainer(RyoBlocks.MOD_ID).ifPresent(container ->
+        FabricLoader loader = FabricLoader.getInstance();
+        loader.getModContainer(RyoBlocks.MOD_ID).ifPresent(container -> {
             ResourceManagerHelper.registerBuiltinResourcePack(
-                new Identifier(RyoBlocks.MOD_ID, "ryo_blocks"),
+                new Identifier(RyoBlocks.MOD_ID, BASE_RESOURCE_PACK),
                 container,
                 ResourcePackActivationType.ALWAYS_ENABLED
-            )
-        );
+            );
+            if (loader.isModLoaded("iris") || loader.isModLoaded("sodium")) {
+                ResourceManagerHelper.registerBuiltinResourcePack(
+                    new Identifier(RyoBlocks.MOD_ID, RENDERER_COMPAT_RESOURCE_PACK),
+                    container,
+                    ResourcePackActivationType.ALWAYS_ENABLED
+                );
+            }
+        });
         EntityRendererRegistry.register(EntityType.VILLAGER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.WANDERING_TRADER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.ENDERMAN, PaSanEndermanRenderer::new);

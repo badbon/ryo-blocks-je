@@ -86,6 +86,12 @@ Validation rejects block texture overrides other than the two baked Kita lava sp
 
 The built-in resource pack overrides Minecraft 1.20.1's terrain core shaders for solid, cutout, cutout-mipped, and translucent block render types. Solid, cutout, and cutout-mipped terrain sample `Sampler0` (Minecraft's native block atlas) and `RyoSampler` (one bundled Ryo overlay texture) on the GPU. The translucent pass stays on Minecraft's normal sample/fog path so lava, water, glass-like terrain, and translucent sorting are not double-tinted. No Iris shaderpack, Sodium, Indium, OptiFine, or shaderpack is required.
 
+## Iris And Sodium Compatibility
+
+Renderer replacement mods such as Iris and Sodium do not use the same vanilla terrain shader path that RyoCraft overrides. When either `iris` or `sodium` is loaded, the client enables a second bundled resource pack, `ryo_blocks_renderer_compat`, containing generated baked block textures. This keeps the normal low-memory `RyoSampler` path for plain Fabric installs while giving Iris shaderpacks such as Photon ordinary atlas textures that already contain the Ryo treatment.
+
+The compatibility pack is generated from the same transparent `source/ryo-block-overlay.png` artwork at 50% alpha-weighted strength. It excludes `lava_*`, `water_*`, and texture names containing `glass`, so Kita lava remains owned by the base pack and translucent/fluid readability is not double-tinted. The generator preserves each baked texture's native dimensions, alpha, and animation metadata.
+
 ## Shared Terrain Submission
 
 On OpenGL 3.2 or newer, solid, cutout-mipped, and cutout chunk uploads are also mirrored into persistent layer-owned vertex-buffer arenas. Complete visible runs that share an arena and a precision-safe 256-block coordinate page are submitted with core `glMultiDrawElementsBaseVertex`. Runs remain in Minecraft's original visible-section order, and their page-relative vertex position plus page camera offset is algebraically identical to Minecraft's section-local position plus section camera offset.

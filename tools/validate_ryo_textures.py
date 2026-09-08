@@ -8,6 +8,9 @@ from pathlib import Path
 from PIL import Image, ImageChops
 
 from generate_ryo_textures import (
+    BLOCK_PREFIX,
+    COMPAT_EXCLUDED_BLOCK_PREFIXES,
+    COMPAT_EXCLUDED_BLOCK_SUBSTRINGS,
     GUI_PREFIX,
     HUD_TEXTURES,
     ITEM_PREFIX,
@@ -16,7 +19,9 @@ from generate_ryo_textures import (
     KITA_LAVA_TEXTURES,
     SHIELD_TEXTURES,
     is_high_risk_item_texture,
+    is_renderer_compat_block_texture,
     kita_lava_texture,
+    ryo_shader_equivalent_block_texture,
     ryo_overlay_texture,
     shader_overlay_source,
     trim_export_border,
@@ -24,7 +29,6 @@ from generate_ryo_textures import (
 )
 
 
-BLOCK_PREFIX = "assets/minecraft/textures/block/"
 CORE_SHADER_PREFIX = Path("assets/minecraft/shaders/core")
 CORE_SHADER_STEMS = (
     "rendertype_solid",
@@ -38,6 +42,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Validate generated Ryo block texture coverage.")
     parser.add_argument("--minecraft-jar", required=True, type=Path)
     parser.add_argument("--resources-dir", default=Path("src/main/resources/resourcepacks/ryo_blocks"), type=Path)
+    parser.add_argument(
+        "--renderer-compat-resources-dir",
+        default=Path("src/main/resources/resourcepacks/ryo_blocks_renderer_compat"),
+        type=Path,
+    )
     parser.add_argument("--item-overlay-source", default=Path("source/ryo-block-overlay.png"), type=Path)
     parser.add_argument("--kita-lava-source", default=Path("source/kita-lava-cutout.png"), type=Path)
     args = parser.parse_args()
@@ -160,6 +169,76 @@ def main() -> None:
         if not overlay_path.exists():
             failures.append("missing shared terrain overlay texture")
 
+        compat_pack = args.renderer_compat_resources_dir
+        compat_pack_meta = compat_pack / "pack.mcmeta"
+        if not compat_pack_meta.exists():
+            failures.append(f"missing renderer compatibility pack metadata: {compat_pack_meta}")
+        compat_block_root = compat_pack / "assets" / "minecraft" / "textures" / "block"
+        generated_compat_block_files = {
+            path.relative_to(compat_block_root).as_posix()
+            for path in compat_block_root.rglob("*.png")
+        } if compat_block_root.exists() else set()
+        expected_compat_block_files = {
+            name.removeprefix(BLOCK_PREFIX)
+            for name in names
+            if name.startswith(BLOCK_PREFIX)
+            and is_renderer_compat_block_texture(name.removeprefix(BLOCK_PREFIX))
+        }
+        if generated_compat_block_files != expected_compat_block_files:
+            failures.append(
+                "renderer compatibility block texture coverage mismatch: "
+                f"missing={sorted(expected_compat_block_files - generated_compat_block_files)[:20]} "
+                f"unexpected={sorted(generated_compat_block_files - expected_compat_block_files)[:20]}"
+            )
+        if item_overlay_tile is not None:
+            for relative in sorted(expected_compat_block_files):
+                name = f"{BLOCK_PREFIX}{relative}"
+                generated_path = compat_block_root / relative
+                if not generated_path.exists():
+                    continue
+                with jar.open(name) as raw:
+                    vanilla = Image.open(raw).convert("RGBA")
+                    vanilla.load()
+                generated = Image.open(generated_path).convert("RGBA")
+                generated.load()
+                if generated.size != vanilla.size:
+                    failures.append(f"renderer compatibility block dimensions changed: {relative}")
+                if ImageChops.difference(vanilla.getchannel("A"), generated.getchannel("A")).getbbox():
+                    failures.append(f"renderer compatibility block alpha changed: {relative}")
+                expected = ryo_shader_equivalent_block_texture(item_overlay_tile, vanilla)
+                if ImageChops.difference(expected, generated).getbbox():
+                    failures.append(f"renderer compatibility block composition mismatch: {relative}")
+                metadata = f"{name}.mcmeta"
+                generated_metadata = compat_block_root / f"{relative}.mcmeta"
+                if metadata in names and (
+                    not generated_metadata.exists()
+                    or generated_metadata.read_bytes() != jar.read(metadata)
+                ):
+                    failures.append(f"renderer compatibility block metadata changed: {relative}")
+                if metadata not in names and generated_metadata.exists():
+                    failures.append(f"unexpected renderer compatibility block metadata: {relative}")
+        compat_summary_path = (
+            compat_pack
+            / "assets"
+            / "minecraft"
+            / "textures"
+            / "ryo-blocks-renderer-compat-summary.json"
+        )
+        if not compat_summary_path.exists():
+            failures.append("missing renderer compatibility summary")
+        else:
+            compat_summary = json.loads(compat_summary_path.read_text(encoding="utf-8"))
+            if compat_summary.get("block_tint_renderer") != "baked_block_textures_for_iris_sodium":
+                failures.append("renderer compatibility summary has wrong renderer marker")
+            if compat_summary.get("overlay_strength") != 0.50:
+                failures.append("renderer compatibility summary has wrong overlay strength")
+            if compat_summary.get("excluded_block_prefixes") != list(COMPAT_EXCLUDED_BLOCK_PREFIXES):
+                failures.append("renderer compatibility summary has wrong excluded prefixes")
+            if compat_summary.get("excluded_block_substrings") != list(COMPAT_EXCLUDED_BLOCK_SUBSTRINGS):
+                failures.append("renderer compatibility summary has wrong excluded substrings")
+            if compat_summary.get("generated_block_textures") != len(expected_compat_block_files):
+                failures.append("renderer compatibility summary has wrong generated count")
+
         item_root = args.resources_dir / "assets" / "minecraft" / "textures" / "item"
         item_hashes: set[bytes] = set()
         for relative in vanilla_item_texture_names(names):
@@ -260,6 +339,7 @@ def main() -> None:
         "checked_hud_textures": checked_hud,
         "checked_shield_textures": checked_shields,
         "checked_kita_lava_textures": checked_kita_lava,
+        "checked_renderer_compat_block_textures": len(expected_compat_block_files),
         "failures": failures,
     }
     print(json.dumps(result, indent=2))

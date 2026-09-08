@@ -13,6 +13,8 @@ from PIL import Image, ImageMath, ImageOps
 BLOCK_PREFIX = "assets/minecraft/textures/block/"
 ITEM_PREFIX = "assets/minecraft/textures/item/"
 GUI_PREFIX = "assets/minecraft/textures/gui/"
+RYO_OVERLAY_STRENGTH = 0.50
+VANILLA_SPRITE_SIZE = 16
 
 EARLY_SURVIVAL_ITEMS = {
     *(f"{material}_{tool}.png" for material in ("wooden", "stone", "iron", "diamond")
@@ -87,6 +89,8 @@ KITA_LAVA_TEXTURES = {
 }
 KITA_LAVA_FRAME_SIZE = 64
 KITA_LAVA_OVERLAY_STRENGTH = 0.68
+COMPAT_EXCLUDED_BLOCK_PREFIXES = ("lava_", "water_")
+COMPAT_EXCLUDED_BLOCK_SUBSTRINGS = ("glass",)
 
 
 def reset_directory(path: Path) -> None:
@@ -204,6 +208,63 @@ def ryo_overlay_texture(tile: Image.Image, vanilla: Image.Image, strength: float
     overlay_alpha = ryo.getchannel("A").point(lambda value: round(value * strength))
     blended = Image.composite(Image.merge("RGB", shaded), vanilla.convert("RGB"), overlay_alpha)
     return Image.merge("RGBA", (*blended.split(), vanilla.getchannel("A")))
+
+
+def is_renderer_compat_block_texture(relative: str) -> bool:
+    return (
+        relative.endswith(".png")
+        and not relative.startswith(COMPAT_EXCLUDED_BLOCK_PREFIXES)
+        and not any(excluded in relative for excluded in COMPAT_EXCLUDED_BLOCK_SUBSTRINGS)
+    )
+
+
+def ryo_shader_equivalent_block_texture(tile: Image.Image, vanilla: Image.Image) -> Image.Image:
+    vanilla = vanilla.convert("RGBA")
+    overlay_sprite = ImageOps.fit(
+        tile,
+        (VANILLA_SPRITE_SIZE, VANILLA_SPRITE_SIZE),
+        method=Image.Resampling.LANCZOS,
+        centering=(0.5, 0.5),
+    )
+    overlay = Image.new("RGBA", vanilla.size, (0, 0, 0, 0))
+    for y in range(0, vanilla.height, VANILLA_SPRITE_SIZE):
+        for x in range(0, vanilla.width, VANILLA_SPRITE_SIZE):
+            overlay.alpha_composite(overlay_sprite, (x, y))
+
+    vanilla_rgb = vanilla.convert("RGB")
+    overlay_alpha = overlay.getchannel("A").point(
+        lambda value: round(value * RYO_OVERLAY_STRENGTH)
+    )
+    blended = Image.composite(overlay.convert("RGB"), vanilla_rgb, overlay_alpha)
+    return Image.merge("RGBA", (*blended.split(), vanilla.getchannel("A")))
+
+
+def generate_renderer_compat_block_textures(
+    jar: zipfile.ZipFile,
+    names: set[str],
+    output_dir: Path,
+    tile: Image.Image,
+) -> int:
+    block_root = output_dir / "assets" / "minecraft" / "textures" / "block"
+    reset_directory(block_root)
+    generated = 0
+    for name in sorted(names):
+        if not name.startswith(BLOCK_PREFIX) or not name.endswith(".png"):
+            continue
+        relative = name.removeprefix(BLOCK_PREFIX)
+        if not is_renderer_compat_block_texture(relative):
+            continue
+        output_path = block_root / relative
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with jar.open(name) as raw:
+            vanilla = Image.open(raw).convert("RGBA")
+            vanilla.load()
+        ryo_shader_equivalent_block_texture(tile, vanilla).save(output_path)
+        metadata = f"{name}.mcmeta"
+        if metadata in names:
+            (block_root / f"{relative}.mcmeta").write_bytes(jar.read(metadata))
+        generated += 1
+    return generated
 
 
 def generate_item_textures(
@@ -351,6 +412,7 @@ def generate_textures(
     kita_lava_source: Path,
     output_dir: Path,
     target_size: int,
+    renderer_compat_output_dir: Path,
 ) -> dict[str, int | str | float]:
     if not minecraft_jar.exists():
         raise FileNotFoundError(f"Minecraft jar not found: {minecraft_jar}")
@@ -366,6 +428,7 @@ def generate_textures(
 
     tile = square_source(source_image, target_size)
     item_overlay_tile = shader_overlay_source(item_overlay_source, target_size)
+    renderer_compat_tile = shader_overlay_source(item_overlay_source, target_size)
 
     with zipfile.ZipFile(minecraft_jar) as jar:
         names = set(jar.namelist())
@@ -378,6 +441,12 @@ def generate_textures(
         generated_items, high_risk_items = generate_item_textures(jar, names, output_dir, item_overlay_tile)
         generated_hud = generate_hud_textures(jar, output_dir, tile)
         generated_shields = generate_shield_textures(jar, output_dir, tile)
+        generated_compat_blocks = generate_renderer_compat_block_textures(
+            jar,
+            names,
+            renderer_compat_output_dir,
+            renderer_compat_tile,
+        )
 
     summary = {
         "generated_block_textures": generated_kita_lava,
@@ -397,6 +466,23 @@ def generate_textures(
     }
     summary_path = output_dir / "assets" / "minecraft" / "textures" / "ryo-blocks-summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    compat_summary = {
+        "block_tint_renderer": "baked_block_textures_for_iris_sodium",
+        "overlay_strength": RYO_OVERLAY_STRENGTH,
+        "vanilla_sprite_size": VANILLA_SPRITE_SIZE,
+        "excluded_block_prefixes": list(COMPAT_EXCLUDED_BLOCK_PREFIXES),
+        "excluded_block_substrings": list(COMPAT_EXCLUDED_BLOCK_SUBSTRINGS),
+        "generated_block_textures": generated_compat_blocks,
+    }
+    compat_summary_path = (
+        renderer_compat_output_dir
+        / "assets"
+        / "minecraft"
+        / "textures"
+        / "ryo-blocks-renderer-compat-summary.json"
+    )
+    compat_summary_path.parent.mkdir(parents=True, exist_ok=True)
+    compat_summary_path.write_text(json.dumps(compat_summary, indent=2), encoding="utf-8")
     return summary
 
 
@@ -407,6 +493,11 @@ def main() -> None:
     parser.add_argument("--item-overlay-source", default=Path("source/ryo-block-overlay.png"), type=Path)
     parser.add_argument("--kita-lava-source", default=Path("source/kita-lava-cutout.png"), type=Path)
     parser.add_argument("--output-dir", default=Path("src/main/resources/resourcepacks/ryo_blocks"), type=Path)
+    parser.add_argument(
+        "--renderer-compat-output-dir",
+        default=Path("src/main/resources/resourcepacks/ryo_blocks_renderer_compat"),
+        type=Path,
+    )
     parser.add_argument("--target-size", default=512, type=int)
     args = parser.parse_args()
 
@@ -417,6 +508,7 @@ def main() -> None:
         args.kita_lava_source,
         args.output_dir,
         args.target_size,
+        args.renderer_compat_output_dir,
     )
     print(json.dumps(summary, indent=2))
 

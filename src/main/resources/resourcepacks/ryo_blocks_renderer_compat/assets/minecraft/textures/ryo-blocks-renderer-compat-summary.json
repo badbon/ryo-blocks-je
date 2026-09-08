@@ -1,0 +1,13 @@
+{
+  "block_tint_renderer": "baked_block_textures_for_iris_sodium",
+  "overlay_strength": 0.5,
+  "vanilla_sprite_size": 16,
+  "excluded_block_prefixes": [
+    "lava_",
+    "water_"
+  ],
+  "excluded_block_substrings": [
+    "glass"
+  ],
+  "generated_block_textures": 888
+}

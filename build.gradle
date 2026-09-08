@@ -152,6 +152,9 @@ tasks.register("verifyStandaloneFabricModules") {
             "com/go4no/ryoblocks/client/RyoTerrainShaders.class",
             "com/go4no/ryoblocks/mixin/client/GameRendererMixin.class",
             "resourcepacks/ryo_blocks/pack.mcmeta",
+            "resourcepacks/ryo_blocks_renderer_compat/pack.mcmeta",
+            "resourcepacks/ryo_blocks_renderer_compat/assets/minecraft/textures/ryo-blocks-renderer-compat-summary.json",
+            "resourcepacks/ryo_blocks_renderer_compat/assets/minecraft/textures/block/stone.png",
             "resourcepacks/ryo_blocks/assets/minecraft/shaders/core/rendertype_solid.fsh",
             "resourcepacks/ryo_blocks/assets/ryo-blocks/textures/terrain/ryo_overlay.png"
         ]
