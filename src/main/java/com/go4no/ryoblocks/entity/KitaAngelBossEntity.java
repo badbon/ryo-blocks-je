@@ -1,5 +1,7 @@
 package com.go4no.ryoblocks.entity;
 
+import com.go4no.ryoblocks.mixin.WitherAttackCooldownAccessor;
+import net.minecraft.entity.ai.goal.ProjectileAttackGoal;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.boss.WitherEntity;
@@ -19,6 +21,30 @@ public final class KitaAngelBossEntity extends WitherEntity {
 
     public KitaAngelBossEntity(EntityType<? extends WitherEntity> entityType, World world) {
         super(entityType, world);
+    }
+
+    @Override
+    protected void initGoals() {
+        super.initGoals();
+        var rangedGoals = goalSelector.getGoals().stream().map(goal -> goal.getGoal())
+            .filter(goal -> goal instanceof ProjectileAttackGoal).toList();
+        rangedGoals.forEach(goalSelector::remove);
+        goalSelector.add(2, new ProjectileAttackGoal(this, 1.0, KitaAttackTiming.MAIN_INTERVAL, 20.0F));
+    }
+
+    @Override
+    protected void mobTick() {
+        int[] cooldowns = ((WitherAttackCooldownAccessor)(Object)this).ryoBlocks$getSkullCooldowns();
+        int previousLeft = cooldowns[0];
+        int previousRight = cooldowns[1];
+        super.mobTick();
+        // Scale newly scheduled delays once, including idle checks, without accelerating other Wither behavior.
+        if (cooldowns[0] != previousLeft && cooldowns[0] > age) {
+            cooldowns[0] = age + KitaAttackTiming.faster(cooldowns[0] - age);
+        }
+        if (cooldowns[1] != previousRight && cooldowns[1] > age) {
+            cooldowns[1] = age + KitaAttackTiming.faster(cooldowns[1] - age);
+        }
     }
 
     @Override
@@ -84,7 +110,7 @@ public final class KitaAngelBossEntity extends WitherEntity {
             return;
         }
         blockedTicks++;
-        if (blockedTicks < 20 || obstacleShotCooldown > 0) return;
+        if (blockedTicks < KitaAttackTiming.STUCK_WAIT || obstacleShotCooldown > 0) return;
 
         java.util.List<BlockPos> surrounding = new java.util.ArrayList<>();
         for (BlockPos pos : BlockPos.iterate(obstacle.add(-1, -1, -1), obstacle.add(1, 1, 1))) {
@@ -99,7 +125,7 @@ public final class KitaAngelBossEntity extends WitherEntity {
             shootObstacleFeather(i < surrounding.size() ? surrounding.get(i) : obstacle);
         }
         if (!isSilent()) getWorld().syncWorldEvent(null, WorldEvents.WITHER_SHOOTS, getBlockPos(), 0);
-        obstacleShotCooldown = 30;
+        obstacleShotCooldown = KitaAttackTiming.CLEARING_INTERVAL;
         blockedTicks = 0;
     }
 

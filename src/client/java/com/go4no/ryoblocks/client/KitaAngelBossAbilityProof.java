@@ -57,8 +57,15 @@ final class KitaAngelBossAbilityProof {
     private volatile boolean obstacleChecksDone;
     private int obstaclePasses;
     private double initialObstacleDistance;
+    private final boolean cadenceProof = Boolean.getBoolean("ryoBlocks.bossCadenceProof");
+    private net.minecraft.entity.boss.WitherEntity cadenceBoss;
+    private final int[] lastObservedCooldowns = new int[2];
 
     void tick(MinecraftClient client) {
+        if (cadenceProof) {
+            tickCadenceProof(client);
+            return;
+        }
         if (obstacleProof) {
             tickObstacleProof(client);
             return;
@@ -109,6 +116,54 @@ final class KitaAngelBossAbilityProof {
 
     private void command(MinecraftServer server, String command) {
         server.getCommandManager().executeWithPrefix(server.getCommandSource(), command);
+    }
+
+    private void tickCadenceProof(MinecraftClient client) {
+        client.options.hudHidden = true;
+        client.getTutorialManager().setStep(net.minecraft.client.tutorial.TutorialStep.NONE);
+        client.getToastManager().clear();
+        client.player.updatePositionAndAngles(-9, 187, -10, -39, 15);
+        int tick = ticks++;
+        int trial = tick / 500;
+        int localTick = tick % 500;
+        if (trial >= 3) {
+            client.scheduleStop();
+            return;
+        }
+        client.getServer().execute(() -> {
+            var server = client.getServer();
+            var world = server.getOverworld();
+            if (localTick == 0) {
+                reset(server);
+                cadenceBoss = boss;
+                if (trial == 2) {
+                    boss.discard();
+                    cadenceBoss = EntityType.WITHER.create(world);
+                    cadenceBoss.refreshPositionAndAngles(0.5, 180, 4.5, 0, 0);
+                    world.spawnEntity(cadenceBoss);
+                }
+                if (trial != 1) {
+                    target = EntityType.IRON_GOLEM.create(world);
+                    target.refreshPositionAndAngles(8, 180, 4.5, 180, 0);
+                    ((net.minecraft.entity.mob.MobEntity)target).setAiDisabled(true);
+                    target.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(5000);
+                    target.setHealth(5000);
+                    world.spawnEntity(target);
+                    cadenceBoss.setTarget(target);
+                }
+                java.util.Arrays.fill(lastObservedCooldowns, 0);
+                LOG.info("CADENCE CASE trial={} entity={}", trial, cadenceBoss.getId());
+            }
+            if (trial == 0 && localTick == 250) cadenceBoss.setHealth(120);
+            int[] scheduled = ((com.go4no.ryoblocks.mixin.WitherAttackCooldownAccessor)cadenceBoss).ryoBlocks$getSkullCooldowns();
+            for (int side = 0; side < 2; side++) {
+                if (scheduled[side] != lastObservedCooldowns[side]) {
+                    LOG.info("CADENCE SCHEDULE trial={} side={} age={} remaining={}", trial, side, cadenceBoss.age, scheduled[side] - cadenceBoss.age);
+                    lastObservedCooldowns[side] = scheduled[side];
+                }
+            }
+            if (localTick == 499) LOG.info("CADENCE CASE COMPLETE trial={}", trial);
+        });
     }
 
     private void tickObstacleProof(MinecraftClient client) {

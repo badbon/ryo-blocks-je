@@ -19,6 +19,7 @@
     ]
   },
   "mixins": [
+    "ryo-blocks.mixins.json",
     "ryo-blocks.client.mixins.json"
   ],
   "depends": {

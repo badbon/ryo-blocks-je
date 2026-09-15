@@ -35,6 +35,9 @@ loom {
                 if (project.hasProperty("bossObstacleProof")) {
                     property "ryoBlocks.bossObstacleProof", "true"
                 }
+                if (project.hasProperty("bossCadenceProof")) {
+                    property "ryoBlocks.bossCadenceProof", "true"
+                }
                 if (project.hasProperty("bossAbilityScene")) {
                     property "ryoBlocks.bossAbilityScene", project.property("bossAbilityScene").toString()
                 }
@@ -239,3 +242,11 @@ tasks.register("verifyStandaloneFabricModules") {
 }
 
 check.dependsOn verifyWolfCollarMixinRefmap, verifyCustomBossCommonEntrypoint, verifyStandaloneFabricModules
+
+tasks.register("verifyKitaAttackTiming", JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = "com.go4no.ryoblocks.entity.KitaAttackTimingTest"
+}
+
+check.dependsOn verifyKitaAttackTiming
