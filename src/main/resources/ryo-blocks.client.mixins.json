@@ -16,7 +16,8 @@
     "KitaFeatherTrailMixin",
     "KitaFeatherImpactMixin",
     "WolfCollarFeatureRendererMixin",
-    "WindowMixin"
+    "WindowMixin",
+    "ProofSoundSystemMixin"
   ],
   "injectors": {
     "defaultRequire": 1

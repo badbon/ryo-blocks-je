@@ -52,8 +52,17 @@ final class KitaAngelBossAbilityProof {
     private final java.util.concurrent.atomic.AtomicInteger blockPictures = new java.util.concurrent.atomic.AtomicInteger();
     private volatile boolean blockChecksDone;
     private int blockChecksPassed;
+    private final boolean obstacleProof = Boolean.getBoolean("ryoBlocks.bossObstacleProof");
+    private final java.util.Set<Integer> clearingProjectiles = new java.util.HashSet<>();
+    private volatile boolean obstacleChecksDone;
+    private int obstaclePasses;
+    private double initialObstacleDistance;
 
     void tick(MinecraftClient client) {
+        if (obstacleProof) {
+            tickObstacleProof(client);
+            return;
+        }
         if (blockImpactProof) {
             tickBlockImpactProof(client);
             return;
@@ -100,6 +109,69 @@ final class KitaAngelBossAbilityProof {
 
     private void command(MinecraftServer server, String command) {
         server.getCommandManager().executeWithPrefix(server.getCommandSource(), command);
+    }
+
+    private void tickObstacleProof(MinecraftClient client) {
+        client.options.getFov().setValue(55);
+        client.options.hudHidden = true;
+        client.getTutorialManager().setStep(net.minecraft.client.tutorial.TutorialStep.NONE);
+        client.getToastManager().clear();
+        client.player.updatePositionAndAngles(-9, 187, -10, -39, 15);
+        client.setCameraEntity(client.player);
+        int tick = ticks++;
+        int trial = tick / 320;
+        int localTick = tick % 320;
+        if (trial < 5) {
+            client.getServer().execute(() -> observeObstacle(client.getServer(), trial, localTick));
+            if (trial < 2 && localTick >= 10) {
+                String name = String.format(java.util.Locale.ROOT, "kita-obstacle-%04d.png", videoFrames++);
+                ScreenshotRecorder.saveScreenshot(client.runDirectory, name, client.getFramebuffer(),
+                    message -> videoSaved.incrementAndGet());
+            }
+        } else if (obstacleChecksDone && videoSaved.get() == 620) {
+            LOG.info("OBSTACLE CHECKS: {}/5 passed; frames={}", obstaclePasses, videoSaved.get());
+            client.scheduleStop();
+        } else if (tick > 1800) {
+            LOG.error("Obstacle proof timed out");
+            client.scheduleStop();
+        }
+    }
+
+    private void observeObstacle(MinecraftServer server, int trial, int tick) {
+        var world = server.getOverworld();
+        if (tick == 0) {
+            reset(server);
+            clearingProjectiles.clear();
+            if (trial == 0) command(server, "fill -3 184 1 10 185 7 oak_log");
+            if (trial == 1 || trial == 3 || trial == 4) {
+                command(server, "fill 3 180 -1 7 189 10 " + (trial == 3 ? "bedrock" : "stone"));
+            }
+            if (trial == 4) command(server, "gamerule mobGriefing false");
+            target = EntityType.IRON_GOLEM.create(world);
+            target.refreshPositionAndAngles(trial == 0 ? 0.5 : 12, 180, 4.5, 180, 0);
+            ((net.minecraft.entity.mob.MobEntity)target).setAiDisabled(true);
+            target.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(1000);
+            target.setHealth(1000);
+            world.spawnEntity(target);
+            boss.setTarget(target);
+            initialObstacleDistance = boss.squaredDistanceTo(target);
+        }
+        for (Entity entity : world.iterateEntities()) {
+            if (entity instanceof WitherSkullEntity skull && skull.getOwner() == boss && skull.isCharged()
+                && skull.getCommandTags().contains(KitaAngelBossEntity.OBSTACLE_SHOT_TAG)) {
+                clearingProjectiles.add(skull.getId());
+            }
+        }
+        if (tick % 20 == 0) LOG.info("OBSTACLE trial={} tick={} pos={} charged={}", trial, tick, boss.getPos(), clearingProjectiles.size());
+        if (tick == 319) {
+            boolean escaped = trial == 0 ? boss.getY() > 184 : boss.getX() > 8;
+            boolean passed = trial < 2 ? escaped && clearingProjectiles.size() >= (trial == 1 ? 6 : 3)
+                : trial == 2 ? boss.squaredDistanceTo(target) < initialObstacleDistance && clearingProjectiles.isEmpty()
+                : !escaped && clearingProjectiles.isEmpty();
+            if (passed) obstaclePasses++;
+            LOG.info("OBSTACLE RESULT trial={} escaped={} charged={} PASS={}", trial, escaped, clearingProjectiles.size(), passed);
+            if (trial == 4) obstacleChecksDone = true;
+        }
     }
 
     private void tickCombatVideo(MinecraftClient client) {

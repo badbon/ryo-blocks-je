@@ -32,6 +32,9 @@ loom {
                 if (project.hasProperty("bossBlockImpactProof")) {
                     property "ryoBlocks.bossBlockImpactProof", "true"
                 }
+                if (project.hasProperty("bossObstacleProof")) {
+                    property "ryoBlocks.bossObstacleProof", "true"
+                }
                 if (project.hasProperty("bossAbilityScene")) {
                     property "ryoBlocks.bossAbilityScene", project.property("bossAbilityScene").toString()
                 }
