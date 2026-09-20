@@ -1,4 +1,10 @@
 {
-  "entity.ryo-blocks.kita_angel_boss": "Kita \"Aura\" Ikuyo",
-  "item.ryo-blocks.kita_angel_boss_spawn_egg": "Kita \"Aura\" Ikuyo Spawn Egg"
+  "entity.ryo-blocks.kita_angel_boss": "Ikuyo Kita",
+  "item.ryo-blocks.kita_angel_boss_spawn_egg": "Ikuyo Kita Spawn Egg",
+  "entity.ryo-blocks.nijika_angel_boss": "Nijika Ijichi",
+  "item.ryo-blocks.nijika_angel_boss_spawn_egg": "Nijika Ijichi Spawn Egg",
+  "entity.ryo-blocks.kikuri_angel_boss": "Kikuri Hiroi",
+  "item.ryo-blocks.kikuri_angel_boss_spawn_egg": "Kikuri Hiroi Spawn Egg",
+  "entity.ryo-blocks.kikuri_clearing_potion": "Kikuri's Clearing Potion",
+  "item.ryo-blocks.dorito": "Dorito"
 }

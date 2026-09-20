@@ -2,6 +2,7 @@ package com.go4no.ryoblocks.mixin.client;
 
 import com.go4no.ryoblocks.client.KitaFeatherEffects;
 import com.go4no.ryoblocks.entity.KitaAngelBossEntity;
+import com.go4no.ryoblocks.entity.NijikaAngelBossEntity;
 import net.minecraft.entity.projectile.ExplosiveProjectileEntity;
 import net.minecraft.entity.projectile.WitherSkullEntity;
 import net.minecraft.particle.ParticleEffect;
@@ -21,6 +22,9 @@ public abstract class KitaFeatherTrailMixin {
             && skull.getOwner() instanceof KitaAngelBossEntity) {
             world.addParticle(skull.age % 2 == 0 ? KitaFeatherEffects.GOLD : KitaFeatherEffects.WHITE,
                 x, y - 0.5, z, velocityX, velocityY, velocityZ);
+        } else if (particle == ParticleTypes.SMOKE && (Object)this instanceof WitherSkullEntity skull
+            && skull.getOwner() instanceof NijikaAngelBossEntity) {
+            world.addParticle(KitaFeatherEffects.GOLD, x, y - 0.5, z, velocityX, velocityY, velocityZ);
         } else {
             world.addParticle(particle, x, y, z, velocityX, velocityY, velocityZ);
         }

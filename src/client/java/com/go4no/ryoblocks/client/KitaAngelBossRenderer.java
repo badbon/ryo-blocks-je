@@ -12,13 +12,19 @@ import net.minecraft.util.math.MathHelper;
 
 public final class KitaAngelBossRenderer<T extends WitherEntity> extends MobEntityRenderer<T, KitaAngelBossModel<T>> {
     private static final float BOSS_SCALE = 1.85F;
+    private final Identifier texture;
 
     public KitaAngelBossRenderer(EntityRendererFactory.Context context) {
+        this(context, KitaAngelBossAssets.PLAYER_TEXTURE, KitaAngelBossAssets.SLIM_ARMS);
+    }
+
+    public KitaAngelBossRenderer(EntityRendererFactory.Context context, Identifier texture, boolean slimArms) {
         super(
             context,
-            new KitaAngelBossModel<>(context.getPart(EntityModelLayers.PLAYER_SLIM), KitaAngelBossAssets.SLIM_ARMS),
+            new KitaAngelBossModel<>(context.getPart(slimArms ? EntityModelLayers.PLAYER_SLIM : EntityModelLayers.PLAYER), slimArms),
             1.15F
         );
+        this.texture = texture;
         this.addFeature(new KitaAngelHaloFeatureRenderer<>(this));
         this.addFeature(new KitaAngelWingsFeatureRenderer<>(this));
     }
@@ -42,6 +48,6 @@ public final class KitaAngelBossRenderer<T extends WitherEntity> extends MobEnti
 
     @Override
     public Identifier getTexture(T wither) {
-        return KitaAngelBossAssets.PLAYER_TEXTURE;
+        return texture;
     }
 }

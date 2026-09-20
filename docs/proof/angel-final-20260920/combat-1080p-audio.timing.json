@@ -1,0 +1,16 @@
+{
+  "segments": [
+    {
+      "stage": 2,
+      "audio_start": 11.392,
+      "duration": 12.5209181
+    },
+    {
+      "stage": 3,
+      "audio_start": 27.946666666666665,
+      "duration": 11.99951
+    }
+  ],
+  "audio": "OpenAL Soft Wave File Writer, 48000 Hz stereo PCM",
+  "sync": "Frame monotonic timestamps; audio starts from PCM byte positions (file buffering may add tens of milliseconds)."
+}

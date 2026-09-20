@@ -10,8 +10,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ProofSoundSystemMixin {
     @Inject(method = "start", at = @At("HEAD"), cancellable = true)
     private void ryoBlocks$disableProofAudioDevice(CallbackInfo ci) {
-        // Proof clients must never open a speaker device, even during loading or resource reloads.
-        if (Boolean.getBoolean("ryoBlocks.visualProof")) {
+        // Only an explicit file-only backend may bypass the proof speaker guard.
+        if (Boolean.getBoolean("ryoBlocks.visualProof")
+            && !com.go4no.ryoblocks.client.ProofRecording.fileAudioEnabled()) {
             org.slf4j.LoggerFactory.getLogger("RyoBlocks/ProofAudio").info("Proof audio device disabled before startup");
             ci.cancel();
         }

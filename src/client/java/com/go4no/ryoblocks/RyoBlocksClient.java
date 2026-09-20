@@ -43,6 +43,12 @@ public final class RyoBlocksClient implements ClientModInitializer {
         EntityRendererRegistry.register(EntityType.WANDERING_TRADER, NijikaVillagerRenderer::new);
         EntityRendererRegistry.register(EntityType.ENDERMAN, PaSanEndermanRenderer::new);
         EntityRendererRegistry.register(RyoBlocks.KITA_ANGEL_BOSS, KitaAngelBossRenderer::new);
+        EntityRendererRegistry.register(RyoBlocks.NIJIKA_ANGEL_BOSS,
+            context -> new KitaAngelBossRenderer<>(context, NijikaAssets.PLAYER_TEXTURE, NijikaAssets.SLIM_ARMS));
+        EntityRendererRegistry.register(RyoBlocks.KIKURI_ANGEL_BOSS,
+            context -> new KitaAngelBossRenderer<>(context, RyoBlocks.id("textures/entity/player/kikuri.png"), true));
+        EntityRendererRegistry.register(RyoBlocks.KIKURI_CLEARING_POTION,
+            net.minecraft.client.render.entity.FlyingItemEntityRenderer::new);
         EntityRendererRegistry.register(EntityType.WITHER_SKULL, KitaFeatherProjectileRenderer::new);
         BlockRenderLayerMap.INSTANCE.putFluids(RenderLayer.getTranslucent(), Fluids.LAVA, Fluids.FLOWING_LAVA);
         boolean bossVisualProof = Boolean.getBoolean("ryoBlocks.bossVisualProof");

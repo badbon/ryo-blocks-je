@@ -62,6 +62,10 @@ final class KitaAngelBossAbilityProof {
     private final int[] lastObservedCooldowns = new int[2];
 
     void tick(MinecraftClient client) {
+        if (variantsProof != null) {
+            variantsProof.tick(client);
+            return;
+        }
         if (cadenceProof) {
             tickCadenceProof(client);
             return;
@@ -117,6 +121,9 @@ final class KitaAngelBossAbilityProof {
     private void command(MinecraftServer server, String command) {
         server.getCommandManager().executeWithPrefix(server.getCommandSource(), command);
     }
+
+    private final AngelBossVariantsProof variantsProof = Boolean.getBoolean("ryoBlocks.bossVariantsProof")
+        ? new AngelBossVariantsProof() : null;
 
     private void tickCadenceProof(MinecraftClient client) {
         client.options.hudHidden = true;

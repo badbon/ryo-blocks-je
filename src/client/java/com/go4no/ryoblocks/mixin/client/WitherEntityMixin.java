@@ -1,6 +1,6 @@
 package com.go4no.ryoblocks.mixin.client;
 
-import com.go4no.ryoblocks.entity.KitaAngelBossEntity;
+import com.go4no.ryoblocks.entity.AngelBossEntity;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.world.World;
@@ -29,7 +29,7 @@ public abstract class WitherEntityMixin {
         double velocityY,
         double velocityZ
     ) {
-        if (!((Object) this instanceof KitaAngelBossEntity)) {
+        if (!((Object) this instanceof AngelBossEntity)) {
             world.addParticle(particle, x, y, z, velocityX, velocityY, velocityZ);
         }
     }

@@ -38,6 +38,12 @@ loom {
                 if (project.hasProperty("bossCadenceProof")) {
                     property "ryoBlocks.bossCadenceProof", "true"
                 }
+                if (project.hasProperty("bossVariantsProof")) {
+                    property "ryoBlocks.bossVariantsProof", "true"
+                    if (project.hasProperty("proofRecording")) {
+                        property "ryoBlocks.proofRecording", "true"
+                    }
+                }
                 if (project.hasProperty("bossAbilityScene")) {
                     property "ryoBlocks.bossAbilityScene", project.property("bossAbilityScene").toString()
                 }
@@ -166,6 +172,14 @@ tasks.register("verifyStandaloneFabricModules") {
         def requiredProductEntries = [
             "com/go4no/ryoblocks/RyoBlocksClient.class",
             "com/go4no/ryoblocks/entity/KitaAngelBossEntity.class",
+            "com/go4no/ryoblocks/entity/AngelBossEntity.class",
+            "com/go4no/ryoblocks/entity/NijikaAngelBossEntity.class",
+            "com/go4no/ryoblocks/entity/KikuriAngelBossEntity.class",
+            "com/go4no/ryoblocks/entity/KikuriClearingPotionEntity.class",
+            "com/go4no/ryoblocks/mixin/AngelBossProjectileMixin.class",
+            "assets/ryo-blocks/textures/entity/player/kikuri.png",
+            "assets/ryo-blocks/textures/item/dorito.png",
+            "assets/ryo-blocks/models/item/dorito.json",
             "com/go4no/ryoblocks/client/KitaAngelBossRenderer.class",
             "assets/ryo-blocks/textures/entity/player/kita_angel.png",
             "assets/ryo-blocks/textures/entity/boss/kita_angel_wings.png",
@@ -250,3 +264,53 @@ tasks.register("verifyKitaAttackTiming", JavaExec) {
 }
 
 check.dependsOn verifyKitaAttackTiming
+
+tasks.register("verifyAngelVariantAssets") {
+    dependsOn remapJar
+    doLast {
+        def jarFile = new java.util.zip.ZipFile(remapJar.archiveFile.get().asFile)
+        try {
+            def root = "assets/ryo-blocks/"
+            def skin = jarFile.getInputStream(jarFile.getEntry(root + "textures/entity/player/kikuri.png")).bytes
+            if (!java.util.Arrays.equals(skin, file("source/kikuri-player-skin.png").bytes)) {
+                throw new GradleException("Kikuri must retain the user's exact downloaded skin")
+            }
+            ["kikuri", "nijika"].each { name ->
+                def entry = jarFile.getEntry(root + "textures/entity/player/${name}.png")
+                def image = javax.imageio.ImageIO.read(jarFile.getInputStream(entry))
+                assert image.width == 64 && image.height == 64
+                [[54,20], [55,31], [46,52], [47,63]].each { p ->
+                    assert (image.getRGB(p[0], p[1]) >>> 24) == 0 : "${name} requires a slim-arm skin"
+                }
+                def model = new groovy.json.JsonSlurper().parse(jarFile.getInputStream(
+                    jarFile.getEntry(root + "models/item/${name}_angel_boss_spawn_egg.json")))
+                assert model.parent == "minecraft:item/template_spawn_egg"
+            }
+            def chip = javax.imageio.ImageIO.read(jarFile.getInputStream(jarFile.getEntry(root + "textures/item/dorito.png")))
+            assert chip.width == 16 && chip.height == 16
+            assert (chip.getRGB(0,0) >>> 24) == 0
+            def colors = [] as Set
+            for (int y = 0; y < 16; y++) {
+                for (int x = 0; x < 16; x++) {
+                    int pixel = chip.getRGB(x, y)
+                    int alpha = pixel >>> 24
+                    assert alpha == 0 || alpha == 255 : "Chip must retain hard pixel edges"
+                    if (alpha == 255) colors.add(pixel)
+                }
+            }
+            assert colors.size() >= 3 && colors.size() <= 8 : "Chip must use a restrained pixel-art palette"
+            def chipModel = new groovy.json.JsonSlurper().parse(jarFile.getInputStream(jarFile.getEntry(root + "models/item/dorito.json")))
+            assert chipModel.parent == "minecraft:item/generated" && !chipModel.containsKey("display")
+            def lang = new groovy.json.JsonSlurper().parse(jarFile.getInputStream(jarFile.getEntry(root + "lang/en_us.json")))
+            assert lang["entity.ryo-blocks.nijika_angel_boss"] == "Nijika Ijichi"
+            assert lang["entity.ryo-blocks.kikuri_angel_boss"] == "Kikuri Hiroi"
+            assert lang["entity.ryo-blocks.kita_angel_boss"] == "Ikuyo Kita"
+            def refmap = jarFile.getInputStream(jarFile.getEntry("ryo-blocks-refmap.json")).getText("UTF-8")
+            assert refmap.contains("AngelBossProjectileMixin") && refmap.contains("shootSkullAt(IDDDZ)V")
+        } finally {
+            jarFile.close()
+        }
+    }
+}
+
+check.dependsOn verifyAngelVariantAssets

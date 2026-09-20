@@ -2,6 +2,11 @@ package com.go4no.ryoblocks.client;
 
 import com.go4no.ryoblocks.KitaAngelBossAssets;
 import com.go4no.ryoblocks.entity.KitaAngelBossEntity;
+import com.go4no.ryoblocks.entity.NijikaAngelBossEntity;
+import com.go4no.ryoblocks.RyoBlocks;
+import net.minecraft.client.render.item.ItemRenderer;
+import net.minecraft.client.render.model.json.ModelTransformationMode;
+import net.minecraft.item.ItemStack;
 import net.minecraft.client.model.ModelData;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.ModelPartBuilder;
@@ -26,9 +31,13 @@ public final class KitaFeatherProjectileRenderer extends WitherSkullEntityRender
     private final ModelPart vane;
     private final ModelPart shaft;
     private final ModelPart halo;
+    private final ItemRenderer itemRenderer;
+    private final ItemStack dorito;
 
     public KitaFeatherProjectileRenderer(EntityRendererFactory.Context context) {
         super(context);
+        itemRenderer = context.getItemRenderer();
+        dorito = new ItemStack(RyoBlocks.DORITO);
         ModelData data = new ModelData();
         var barbs = data.getRoot().addChild("vane", ModelPartBuilder.create(), ModelTransform.NONE);
         float[] widths = {2, 3.5F, 4.5F, 4, 3, 1.5F};
@@ -59,6 +68,18 @@ public final class KitaFeatherProjectileRenderer extends WitherSkullEntityRender
     @Override
     public void render(WitherSkullEntity projectile, float yaw, float tickDelta, MatrixStack matrices,
                        VertexConsumerProvider consumers, int light) {
+        if (projectile.getOwner() instanceof NijikaAngelBossEntity) {
+            matrices.push();
+            matrices.multiply(dispatcher.getRotation());
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
+            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees((projectile.age + tickDelta) * 12));
+            float size = projectile.isCharged() ? 1.35F : 1.0F;
+            matrices.scale(size, size, size);
+            itemRenderer.renderItem(dorito, ModelTransformationMode.GROUND, light,
+                OverlayTexture.DEFAULT_UV, matrices, consumers, projectile.getWorld(), projectile.getId());
+            matrices.pop();
+            return;
+        }
         if (!(projectile.getOwner() instanceof KitaAngelBossEntity)) {
             super.render(projectile, yaw, tickDelta, matrices, consumers, light);
             return;

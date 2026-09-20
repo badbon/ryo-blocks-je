@@ -94,7 +94,7 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
                 commands.executeWithPrefix(source, "summon ryo-blocks:kita_angel_boss 0 182 4 {NoAI:1b,Silent:1b,Invulnerable:1b,Invul:0,Rotation:[180.0f,0.0f],CustomName:'{\"text\":\"Kita \\\\\"Aura\\\\\" Ikuyo\",\"color\":\"light_purple\"}'}");
                 commands.executeWithPrefix(source, "tp " + playerName + " 0 182 -9 0 10");
             });
-            client.getWindow().setWindowedSize(1280, 720);
+            client.getWindow().setWindowedSize(ProofRecording.ENABLED ? 1920 : 1280, ProofRecording.ENABLED ? 1080 : 720);
             client.options.tutorialStep = net.minecraft.client.tutorial.TutorialStep.NONE;
             client.options.getCloudRenderMode().setValue(CloudRenderMode.OFF);
             client.options.getFov().setValue(50);
@@ -150,7 +150,7 @@ public final class KitaAngelBossVisualProof implements ClientTickEvents.EndTick 
 
     private static void muteProofClient(MinecraftClient client) {
         for (SoundCategory category : SoundCategory.values()) {
-            client.options.getSoundVolumeOption(category).setValue(0.0D);
+            client.options.getSoundVolumeOption(category).setValue(ProofRecording.fileAudioEnabled() ? 0.7D : 0.0D);
         }
     }
 
